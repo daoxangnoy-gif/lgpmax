@@ -9,6 +9,11 @@ dist-ssr
 *.log
 .vite
 
+# tsc -b build artifacts
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+
 # Capacitor / Android (เผื่อ wrap APK ภายหลัง)
 android
 ios
