@@ -63,12 +63,35 @@ create table if not exists public.ft_formations (
   created_at timestamptz not null default now()
 );
 
+-- โซเชียลของสตอรี่ (ไลค์/รีแอค + คอมเมนต์) — v1 ใช้ device_id แทน user
+create table if not exists public.ft_reactions (
+  id         uuid primary key default gen_random_uuid(),
+  match_id   uuid not null references public.ft_matches(id) on delete cascade,
+  device_id  text not null,
+  type       text not null default 'like',   -- like/love/haha/wow/sad/angry
+  created_at timestamptz not null default now(),
+  unique (match_id, device_id)
+);
+
+create table if not exists public.ft_comments (
+  id          uuid primary key default gen_random_uuid(),
+  match_id    uuid not null references public.ft_matches(id) on delete cascade,
+  parent_id   uuid references public.ft_comments(id) on delete cascade, -- reply
+  device_id   text,
+  author_name text not null default 'ผู้เล่น',
+  body        text not null,
+  created_at  timestamptz not null default now()
+);
+
 -- ---------- Indexes ----------
 create index if not exists idx_ft_matches_date on public.ft_matches(match_date desc);
 create index if not exists idx_ft_reg_match on public.ft_match_registrations(match_id);
 create index if not exists idx_ft_reg_player on public.ft_match_registrations(player_id);
 create index if not exists idx_ft_story_match on public.ft_story_photos(match_id);
 create index if not exists idx_ft_formations_match on public.ft_formations(match_id);
+create index if not exists idx_ft_reactions_match on public.ft_reactions(match_id);
+create index if not exists idx_ft_comments_match on public.ft_comments(match_id);
+create index if not exists idx_ft_comments_parent on public.ft_comments(parent_id);
 
 -- ---------- RLS (v1: เปิดให้ anon ทำได้ทุกอย่าง) ----------
 alter table public.ft_players             enable row level security;
@@ -77,12 +100,15 @@ alter table public.ft_matches             enable row level security;
 alter table public.ft_match_registrations enable row level security;
 alter table public.ft_story_photos        enable row level security;
 alter table public.ft_formations          enable row level security;
+alter table public.ft_reactions           enable row level security;
+alter table public.ft_comments            enable row level security;
 
 do $$
 declare t text;
 begin
   foreach t in array array[
-    'ft_players','ft_venues','ft_matches','ft_match_registrations','ft_story_photos','ft_formations'
+    'ft_players','ft_venues','ft_matches','ft_match_registrations','ft_story_photos','ft_formations',
+    'ft_reactions','ft_comments'
   ] loop
     execute format('drop policy if exists "anon_all_%1$s" on public.%1$s;', t);
     execute format(
@@ -102,7 +128,9 @@ grant select, insert, update, delete on
   public.ft_matches,
   public.ft_match_registrations,
   public.ft_story_photos,
-  public.ft_formations
+  public.ft_formations,
+  public.ft_reactions,
+  public.ft_comments
   to anon, authenticated;
 
 -- ---------- Storage bucket สำหรับรูปภาพ ----------

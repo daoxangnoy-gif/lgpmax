@@ -1,16 +1,31 @@
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { ImagePlus, Loader2, Trash2, Pencil, MapPin, Trophy } from "lucide-react";
 import { toast } from "sonner";
 import AppHeader from "@/components/AppHeader";
 import EnvBanner from "@/components/EnvBanner";
+import PostSocial from "@/components/PostSocial";
 import { useMatches, useUpsertMatch } from "@/hooks/useMatches";
 import { useAddStoryPhoto, useDeleteStoryPhoto, useStoryPhotos } from "@/hooks/useStory";
 import { uploadImage } from "@/lib/storage";
-import { formatMatchWhen, venueText } from "@/lib/format";
+import { formatMatchWhen, scoreText, venueText } from "@/lib/format";
 import type { Match, StoryPhoto } from "@/types";
 
 export default function StoryPage() {
   const { data: matches = [], isLoading } = useMatches();
+  const [searchParams] = useSearchParams();
+
+  // deep-link จากการแชร์: #/story?m=<id> → เลื่อนไปโพสต์นั้น
+  const focusId = searchParams.get("m");
+  useEffect(() => {
+    if (!focusId || matches.length === 0) return;
+    const el = document.getElementById(`post-${focusId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      el.classList.add("ring-2", "ring-brand");
+      setTimeout(() => el.classList.remove("ring-2", "ring-brand"), 2000);
+    }
+  }, [focusId, matches.length]);
 
   return (
     <div>
@@ -100,8 +115,16 @@ function MatchPost({ match }: { match: Match }) {
     await delPhoto.mutateAsync(photo);
   }
 
+  const shareInfo = {
+    title: "FootyTeam",
+    text: `⚽ พบ ${opponentName} · ${formatMatchWhen(match)}${
+      scoreText(match) ? ` · ผล ${scoreText(match)}` : ""
+    }`,
+    url: `${location.origin}${location.pathname}#/story?m=${match.id}`,
+  };
+
   return (
-    <article className="card overflow-hidden">
+    <article id={`post-${match.id}`} className="card overflow-hidden transition-all">
       {/* header โพสต์ */}
       <div className="flex items-center gap-3 p-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand text-lg font-bold text-brand-fg">
@@ -228,6 +251,9 @@ function MatchPost({ match }: { match: Match }) {
           }}
         />
       </div>
+
+      {/* ไลค์ / คอมเมนต์ / แชร์ */}
+      <PostSocial matchId={match.id} shareInfo={shareInfo} />
     </article>
   );
 }

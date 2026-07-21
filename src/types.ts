@@ -84,3 +84,37 @@ export interface Formation {
   data: FormationData;
   created_at: string;
 }
+
+// ---------- Social (สตอรี่) ----------
+export type ReactionType = "like" | "love" | "haha" | "wow" | "sad" | "angry";
+
+export const REACTIONS: { type: ReactionType; emoji: string; label: string }[] = [
+  { type: "like", emoji: "👍", label: "ถูกใจ" },
+  { type: "love", emoji: "❤️", label: "รัก" },
+  { type: "haha", emoji: "😆", label: "ฮา" },
+  { type: "wow", emoji: "😮", label: "ว้าว" },
+  { type: "sad", emoji: "😢", label: "เศร้า" },
+  { type: "angry", emoji: "😡", label: "โกรธ" },
+];
+
+export const REACTION_EMOJI: Record<ReactionType, string> = Object.fromEntries(
+  REACTIONS.map((r) => [r.type, r.emoji])
+) as Record<ReactionType, string>;
+
+export interface Reaction {
+  id: string;
+  match_id: string;
+  device_id: string;
+  type: ReactionType;
+  created_at: string;
+}
+
+export interface Comment {
+  id: string;
+  match_id: string;
+  parent_id: string | null;
+  device_id: string | null;
+  author_name: string;
+  body: string;
+  created_at: string;
+}

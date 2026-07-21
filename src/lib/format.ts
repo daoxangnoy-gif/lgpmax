@@ -1,6 +1,15 @@
-import { format, parseISO } from "date-fns";
+import { format, formatDistanceToNow, parseISO } from "date-fns";
 import { th } from "date-fns/locale";
 import type { Match } from "@/types";
+
+/** เวลาแบบ "5 นาทีที่แล้ว" */
+export function timeAgo(dateStr: string): string {
+  try {
+    return formatDistanceToNow(parseISO(dateStr), { addSuffix: true, locale: th });
+  } catch {
+    return "";
+  }
+}
 
 /** วันที่แบบไทยอ่านง่าย เช่น "อา. 21 ก.ค. 2026" */
 export function formatThaiDate(dateStr: string): string {
