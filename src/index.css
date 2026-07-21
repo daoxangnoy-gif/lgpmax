@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* โทนสีทีม (ปรับได้) — ค่าเป็น HSL ไม่มี hsl() ครอบ */
+  --brand: 142 72% 29%;      /* เขียวสนาม */
+  --brand-fg: 0 0% 100%;     /* ตัวอักษรบนสีแบรนด์ */
+  --brand-dark: 142 72% 20%;
+
+  --bg: 222 47% 8%;          /* พื้นหลังเข้ม (โทนแอป) */
+  --surface: 222 30% 14%;
+  --surface-2: 222 25% 18%;
+  --border: 222 20% 26%;
+  --text: 210 20% 96%;
+  --text-muted: 215 16% 65%;
+
+  color-scheme: dark;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: hsl(var(--bg));
+  color: hsl(var(--text));
+  font-family: "Noto Sans Thai", system-ui, -apple-system, "Segoe UI", sans-serif;
+  overscroll-behavior-y: none;
+}
+
+/* safe-area helpers */
+.pt-safe { padding-top: env(safe-area-inset-top); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+.h-safe-top { height: env(safe-area-inset-top); }
+
+/* ซ่อน scrollbar แนวนอนแบบ chip filter */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--surface))] shadow-card;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-brand {
+    @apply btn bg-brand text-brand-fg hover:bg-brand-dark;
+  }
+  .btn-ghost {
+    @apply btn bg-[hsl(var(--surface-2))] text-[hsl(var(--text))] hover:brightness-110;
+  }
+  .btn-danger {
+    @apply btn bg-red-600 text-white hover:bg-red-700;
+  }
+  .input {
+    @apply w-full rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--surface-2))] px-3.5 py-2.5 text-sm text-[hsl(var(--text))] placeholder:text-[hsl(var(--text-muted))] outline-none focus:border-brand;
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-medium text-[hsl(var(--text-muted))];
+  }
+  .chip {
+    @apply whitespace-nowrap rounded-full border border-[hsl(var(--border))] px-3.5 py-1.5 text-sm transition;
+  }
+  .chip-active {
+    @apply border-transparent bg-brand text-brand-fg;
+  }
+}

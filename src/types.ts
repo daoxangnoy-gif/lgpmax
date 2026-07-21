@@ -1,0 +1,86 @@
+// ---------- Domain types ----------
+
+export type PlayerStatus = "available" | "injured" | "unavailable" | "resting";
+
+export const PLAYER_STATUS_LABEL: Record<PlayerStatus, string> = {
+  available: "พร้อมเล่น",
+  injured: "บาดเจ็บ",
+  unavailable: "ไม่สะดวก",
+  resting: "พักทีม",
+};
+
+export const PLAYER_STATUS_COLOR: Record<PlayerStatus, string> = {
+  available: "bg-emerald-500",
+  injured: "bg-red-500",
+  unavailable: "bg-amber-500",
+  resting: "bg-slate-400",
+};
+
+/** ตำแหน่งมาตรฐาน (พิมพ์เองได้ด้วย) */
+export const POSITIONS = ["GK", "DF", "MF", "FW"] as const;
+
+export interface Player {
+  id: string;
+  name: string;
+  jersey_number: number | null;
+  position: string | null;
+  status: PlayerStatus;
+  photo_url: string | null;
+  created_at: string;
+}
+
+export interface Venue {
+  id: string;
+  name: string;
+  address: string | null;
+  created_at: string;
+}
+
+export interface Match {
+  id: string;
+  match_date: string; // YYYY-MM-DD
+  match_time: string | null; // HH:MM(:SS)
+  venue_id: string | null;
+  venue_name: string | null;
+  opponent: string | null;
+  score_us: number | null;
+  score_opponent: number | null;
+  created_at: string;
+}
+
+export type RegistrationStatus = "going" | "not_going";
+
+export interface MatchRegistration {
+  id: string;
+  match_id: string;
+  player_id: string;
+  status: RegistrationStatus;
+  created_at: string;
+}
+
+export interface StoryPhoto {
+  id: string;
+  match_id: string;
+  photo_url: string;
+  caption: string | null;
+  created_at: string;
+}
+
+/** ตำแหน่งผู้เล่นบนสนาม เก็บแบบ normalized 0..1 */
+export interface FormationPosition {
+  player_id: string;
+  x: number; // 0..1 (ซ้าย→ขวา)
+  y: number; // 0..1 (ประตูเรา→ประตูคู่แข่ง)
+}
+
+export interface FormationData {
+  positions: FormationPosition[];
+}
+
+export interface Formation {
+  id: string;
+  name: string;
+  match_id: string | null;
+  data: FormationData;
+  created_at: string;
+}
