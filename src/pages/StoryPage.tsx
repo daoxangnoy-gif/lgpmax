@@ -1,74 +1,70 @@
 import { useEffect, useRef, useState } from "react";
-import { ImagePlus, Loader2, Trash2, Save } from "lucide-react";
+import { ImagePlus, Loader2, Trash2, Pencil, MapPin, Trophy } from "lucide-react";
 import { toast } from "sonner";
 import AppHeader from "@/components/AppHeader";
 import EnvBanner from "@/components/EnvBanner";
 import { useMatches, useUpsertMatch } from "@/hooks/useMatches";
 import { useAddStoryPhoto, useDeleteStoryPhoto, useStoryPhotos } from "@/hooks/useStory";
 import { uploadImage } from "@/lib/storage";
-import { formatThaiDate } from "@/lib/format";
+import { formatMatchWhen, venueText } from "@/lib/format";
 import type { Match, StoryPhoto } from "@/types";
 
 export default function StoryPage() {
-  const { data: matches = [] } = useMatches();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!selectedId && matches.length) setSelectedId(matches[0].id);
-  }, [matches, selectedId]);
-
-  const selected = matches.find((m) => m.id === selectedId) ?? null;
+  const { data: matches = [], isLoading } = useMatches();
 
   return (
     <div>
-      <AppHeader title="สตอรี่บอร์ด" subtitle="อัลบั้ม + สกอร์ ของแต่ละนัด" />
+      <AppHeader title="สตอรี่บอร์ด" subtitle="ฟีดทุกนัด — ล่าสุดอยู่บนสุด" />
       <EnvBanner />
 
       <div className="mx-auto max-w-lg space-y-4 px-4 py-3">
-        {matches.length === 0 ? (
+        {isLoading && (
+          <p className="py-10 text-center text-[hsl(var(--text-muted))]">กำลังโหลด...</p>
+        )}
+        {!isLoading && matches.length === 0 && (
           <p className="py-10 text-center text-[hsl(var(--text-muted))]">
             ยังไม่มีนัด — สร้างนัดที่เมนู “นัดแข่ง” ก่อน
           </p>
-        ) : (
-          <>
-            {/* timeline เลือกนัด */}
-            <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
-              {matches.map((m) => (
-                <button
-                  key={m.id}
-                  onClick={() => setSelectedId(m.id)}
-                  className={`chip flex-col !items-start gap-0 !rounded-2xl px-3 py-2 text-left ${
-                    selectedId === m.id ? "chip-active" : ""
-                  }`}
-                >
-                  <span className="text-[11px] opacity-80">{formatThaiDate(m.match_date)}</span>
-                  <span className="text-sm font-medium">{m.opponent || "คู่แข่ง?"}</span>
-                </button>
-              ))}
-            </div>
-
-            {selected && <MatchStory key={selected.id} match={selected} />}
-          </>
         )}
+
+        {/* ฟีดแบบเฟสบุก: ทุกนัดเรียงล่าสุดบนสุด (matches sort desc มาแล้ว) */}
+        {matches.map((m) => (
+          <MatchPost key={m.id} match={m} />
+        ))}
       </div>
     </div>
   );
 }
 
-function MatchStory({ match }: { match: Match }) {
+function MatchPost({ match }: { match: Match }) {
   const { data: photos = [] } = useStoryPhotos(match.id);
   const addPhoto = useAddStoryPhoto(match.id);
   const delPhoto = useDeleteStoryPhoto(match.id);
   const upsertMatch = useUpsertMatch();
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [editScore, setEditScore] = useState(false);
   const [us, setUs] = useState(match.score_us?.toString() ?? "");
   const [opp, setOpp] = useState(match.score_opponent?.toString() ?? "");
 
   useEffect(() => {
     setUs(match.score_us?.toString() ?? "");
     setOpp(match.score_opponent?.toString() ?? "");
-  }, [match.id, match.score_us, match.score_opponent]);
+  }, [match.score_us, match.score_opponent]);
+
+  const hasScore = match.score_us != null || match.score_opponent != null;
+  const opponentName = match.opponent || "คู่แข่ง";
+  const initial = opponentName.trim().slice(0, 1).toUpperCase();
+
+  // ผล แพ้/ชนะ/เสมอ (มุมทีมเรา)
+  let result: { text: string; cls: string } | null = null;
+  if (hasScore) {
+    const a = match.score_us ?? 0;
+    const b = match.score_opponent ?? 0;
+    if (a > b) result = { text: "ชนะ", cls: "bg-emerald-500/20 text-emerald-400" };
+    else if (a < b) result = { text: "แพ้", cls: "bg-red-500/20 text-red-400" };
+    else result = { text: "เสมอ", cls: "bg-amber-500/20 text-amber-400" };
+  }
 
   async function saveScore() {
     try {
@@ -78,6 +74,7 @@ function MatchStory({ match }: { match: Match }) {
         score_opponent: opp === "" ? null : Number(opp),
       });
       toast.success("บันทึกสกอร์แล้ว");
+      setEditScore(false);
     } catch (e) {
       toast.error("บันทึกไม่สำเร็จ", { description: String((e as Error).message) });
     }
@@ -104,46 +101,120 @@ function MatchStory({ match }: { match: Match }) {
   }
 
   return (
-    <div className="space-y-4">
-      {/* สกอร์ */}
-      <div className="card p-4">
-        <div className="mb-2 text-xs font-medium text-[hsl(var(--text-muted))]">สกอร์</div>
-        <div className="flex items-center justify-center gap-3">
-          <div className="text-center">
-            <div className="text-[11px] text-[hsl(var(--text-muted))]">ทีมเรา</div>
-            <input
-              className="input mt-1 w-16 text-center text-xl font-bold"
-              type="number"
-              inputMode="numeric"
-              value={us}
-              onChange={(e) => setUs(e.target.value)}
-            />
-          </div>
-          <span className="pt-4 text-xl font-bold text-[hsl(var(--text-muted))]">-</span>
-          <div className="text-center">
-            <div className="text-[11px] text-[hsl(var(--text-muted))]">
-              {match.opponent || "คู่แข่ง"}
-            </div>
-            <input
-              className="input mt-1 w-16 text-center text-xl font-bold"
-              type="number"
-              inputMode="numeric"
-              value={opp}
-              onChange={(e) => setOpp(e.target.value)}
-            />
-          </div>
-          <button className="btn-brand ml-2 mt-4" onClick={saveScore} disabled={upsertMatch.isPending}>
-            <Save size={16} /> บันทึก
-          </button>
+    <article className="card overflow-hidden">
+      {/* header โพสต์ */}
+      <div className="flex items-center gap-3 p-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand text-lg font-bold text-brand-fg">
+          {initial}
         </div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-semibold">พบ {opponentName}</div>
+          <div className="flex items-center gap-1 text-xs text-[hsl(var(--text-muted))]">
+            {formatMatchWhen(match)}
+          </div>
+        </div>
+        {result && (
+          <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${result.cls}`}>
+            {result.text}
+          </span>
+        )}
       </div>
 
-      {/* อัลบั้ม */}
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold">อัลบั้ม ({photos.length})</h3>
-        <button className="btn-ghost" onClick={() => fileRef.current?.click()} disabled={uploading}>
+      {/* สนาม */}
+      <div className="flex items-center gap-1 px-3 pb-2 text-xs text-[hsl(var(--text-muted))]">
+        <MapPin size={13} /> {venueText(match)}
+      </div>
+
+      {/* สกอร์ */}
+      <div className="mx-3 mb-3 rounded-xl bg-[hsl(var(--surface-2))] p-3">
+        {!editScore ? (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Trophy size={18} className="text-[hsl(var(--text-muted))]" />
+              {hasScore ? (
+                <div className="flex items-baseline gap-2">
+                  <span className="text-sm text-[hsl(var(--text-muted))]">ทีมเรา</span>
+                  <span className="text-2xl font-bold text-brand">{match.score_us ?? 0}</span>
+                  <span className="text-lg text-[hsl(var(--text-muted))]">-</span>
+                  <span className="text-2xl font-bold">{match.score_opponent ?? 0}</span>
+                  <span className="text-sm text-[hsl(var(--text-muted))]">{opponentName}</span>
+                </div>
+              ) : (
+                <span className="text-sm text-[hsl(var(--text-muted))]">ยังไม่มีผล</span>
+              )}
+            </div>
+            <button
+              className="rounded-lg p-1.5 text-[hsl(var(--text-muted))] hover:bg-[hsl(var(--surface))]"
+              onClick={() => setEditScore(true)}
+              aria-label="แก้สกอร์"
+            >
+              <Pencil size={16} />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center gap-2">
+            <div className="text-center">
+              <div className="text-[10px] text-[hsl(var(--text-muted))]">ทีมเรา</div>
+              <input
+                className="input mt-1 w-14 text-center text-lg font-bold"
+                type="number"
+                inputMode="numeric"
+                value={us}
+                onChange={(e) => setUs(e.target.value)}
+              />
+            </div>
+            <span className="pt-4 font-bold text-[hsl(var(--text-muted))]">-</span>
+            <div className="text-center">
+              <div className="max-w-16 truncate text-[10px] text-[hsl(var(--text-muted))]">
+                {opponentName}
+              </div>
+              <input
+                className="input mt-1 w-14 text-center text-lg font-bold"
+                type="number"
+                inputMode="numeric"
+                value={opp}
+                onChange={(e) => setOpp(e.target.value)}
+              />
+            </div>
+            <button className="btn-brand ml-1 mt-4" onClick={saveScore} disabled={upsertMatch.isPending}>
+              บันทึก
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* อัลบั้มรูป */}
+      {photos.length > 0 && (
+        <div className={`grid gap-0.5 ${photos.length === 1 ? "grid-cols-1" : "grid-cols-3"}`}>
+          {photos.map((ph) => (
+            <div
+              key={ph.id}
+              className={`group relative overflow-hidden ${
+                photos.length === 1 ? "aspect-video" : "aspect-square"
+              }`}
+            >
+              <img src={ph.photo_url} alt={ph.caption ?? ""} className="h-full w-full object-cover" />
+              <button
+                onClick={() => onDelete(ph)}
+                className="absolute right-1 top-1 rounded-lg bg-black/60 p-1.5 text-white opacity-0 transition group-hover:opacity-100"
+                aria-label="ลบรูป"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* เพิ่มรูป */}
+      <div className="p-3">
+        <button
+          className="btn-ghost w-full"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+        >
           {uploading ? <Loader2 size={16} className="animate-spin" /> : <ImagePlus size={16} />}
-          เพิ่มรูป
+          เพิ่มรูปไฮไลต์
         </button>
         <input
           ref={fileRef}
@@ -157,27 +228,6 @@ function MatchStory({ match }: { match: Match }) {
           }}
         />
       </div>
-
-      {photos.length === 0 ? (
-        <p className="py-6 text-center text-sm text-[hsl(var(--text-muted))]">
-          ยังไม่มีรูป — กด “เพิ่มรูป”
-        </p>
-      ) : (
-        <div className="grid grid-cols-3 gap-2">
-          {photos.map((ph) => (
-            <div key={ph.id} className="group relative aspect-square overflow-hidden rounded-xl">
-              <img src={ph.photo_url} alt={ph.caption ?? ""} className="h-full w-full object-cover" />
-              <button
-                onClick={() => onDelete(ph)}
-                className="absolute right-1 top-1 rounded-lg bg-black/60 p-1.5 text-white opacity-0 transition group-hover:opacity-100"
-                aria-label="ลบรูป"
-              >
-                <Trash2 size={14} />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+    </article>
   );
 }

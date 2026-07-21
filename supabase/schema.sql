@@ -92,6 +92,19 @@ begin
   end loop;
 end $$;
 
+-- ---------- Table privileges (GRANT) ----------
+-- จำเป็นนอกเหนือจาก RLS: บาง project ตั้ง default ให้ anon แค่ SELECT
+-- ต้อง grant write ให้ครบ ไม่งั้น insert/update/delete จะโดน "permission denied" (42501)
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on
+  public.ft_players,
+  public.ft_venues,
+  public.ft_matches,
+  public.ft_match_registrations,
+  public.ft_story_photos,
+  public.ft_formations
+  to anon, authenticated;
+
 -- ---------- Storage bucket สำหรับรูปภาพ ----------
 insert into storage.buckets (id, name, public)
 values ('ft_photos', 'ft_photos', true)
