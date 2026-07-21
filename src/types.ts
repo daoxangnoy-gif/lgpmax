@@ -19,6 +19,14 @@ export const PLAYER_STATUS_COLOR: Record<PlayerStatus, string> = {
 /** ตำแหน่งมาตรฐาน (พิมพ์เองได้ด้วย) */
 export const POSITIONS = ["GK", "DF", "MF", "FW"] as const;
 
+/** ตำแหน่งมาตรฐาน + ชื่อเต็มภาษาไทย (เก็บ DB เป็นรหัสสั้น) */
+export const POSITIONS_FULL: { code: string; label: string }[] = [
+  { code: "GK", label: "ผู้รักษาประตู" },
+  { code: "DF", label: "กองหลัง" },
+  { code: "MF", label: "กองกลาง" },
+  { code: "FW", label: "กองหน้า" },
+];
+
 export interface Player {
   id: string;
   name: string;

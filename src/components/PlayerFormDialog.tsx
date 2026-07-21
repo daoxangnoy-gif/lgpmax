@@ -3,7 +3,9 @@ import { toast } from "sonner";
 import Modal from "./Modal";
 import ImageUpload from "./ImageUpload";
 import { useDeletePlayer, useUpsertPlayer } from "@/hooks/usePlayers";
-import { POSITIONS, PLAYER_STATUS_LABEL, type Player, type PlayerStatus } from "@/types";
+import { POSITIONS, POSITIONS_FULL, PLAYER_STATUS_LABEL, type Player, type PlayerStatus } from "@/types";
+
+const CUSTOM = "__custom__";
 
 const STATUSES = Object.keys(PLAYER_STATUS_LABEL) as PlayerStatus[];
 
@@ -25,8 +27,12 @@ export default function PlayerFormDialog({
   editing: Player | null;
 }) {
   const [form, setForm] = useState(empty);
+  const [customPos, setCustomPos] = useState(false);
   const upsert = useUpsertPlayer();
   const del = useDeletePlayer();
+
+  // โชว์ช่องพิมพ์เอง เมื่อเลือก "อื่นๆ" หรือค่าปัจจุบันไม่ใช่ตำแหน่งมาตรฐาน
+  const showCustom = customPos || (!!form.position && !POSITIONS.includes(form.position as (typeof POSITIONS)[number]));
 
   useEffect(() => {
     if (open) {
@@ -41,6 +47,7 @@ export default function PlayerFormDialog({
             }
           : empty
       );
+      setCustomPos(false);
     }
   }, [open, editing]);
 
@@ -129,18 +136,37 @@ export default function PlayerFormDialog({
           </div>
           <div>
             <label className="label">ตำแหน่ง</label>
-            <input
+            <select
               className="input"
-              list="positions"
-              value={form.position}
-              onChange={(e) => setForm((f) => ({ ...f, position: e.target.value }))}
-              placeholder="GK / DF / MF / FW"
-            />
-            <datalist id="positions">
-              {POSITIONS.map((p) => (
-                <option key={p} value={p} />
+              value={showCustom ? CUSTOM : form.position}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === CUSTOM) {
+                  setCustomPos(true);
+                  setForm((f) => ({ ...f, position: "" }));
+                } else {
+                  setCustomPos(false);
+                  setForm((f) => ({ ...f, position: v }));
+                }
+              }}
+            >
+              <option value="">— ไม่ระบุ —</option>
+              {POSITIONS_FULL.map((p) => (
+                <option key={p.code} value={p.code}>
+                  {p.code} — {p.label}
+                </option>
               ))}
-            </datalist>
+              <option value={CUSTOM}>อื่นๆ (พิมพ์เอง)</option>
+            </select>
+            {showCustom && (
+              <input
+                className="input mt-2"
+                value={form.position}
+                onChange={(e) => setForm((f) => ({ ...f, position: e.target.value }))}
+                placeholder="เช่น CB, LB, ST, CAM"
+                autoFocus
+              />
+            )}
           </div>
         </div>
 
