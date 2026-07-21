@@ -1,6 +1,6 @@
 import { supabase } from "./supabase";
 
-const BUCKET = "photos";
+const BUCKET = "ft_photos";
 
 /** อัปโหลดไฟล์รูปขึ้น Supabase Storage แล้วคืน public URL */
 export async function uploadImage(file: File, folder = "misc"): Promise<string> {

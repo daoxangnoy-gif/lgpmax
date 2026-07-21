@@ -9,7 +9,7 @@ export function useVenues() {
     queryKey: KEY,
     queryFn: async (): Promise<Venue[]> => {
       const { data, error } = await supabase
-        .from("venues")
+        .from("ft_venues")
         .select("*")
         .order("name", { ascending: true });
       if (error) throw error;
@@ -26,14 +26,14 @@ export function useEnsureVenue() {
       const trimmed = name.trim();
       if (!trimmed) return null;
       const { data: existing } = await supabase
-        .from("venues")
+        .from("ft_venues")
         .select("*")
         .ilike("name", trimmed)
         .limit(1)
         .maybeSingle();
       if (existing) return existing as Venue;
       const { data, error } = await supabase
-        .from("venues")
+        .from("ft_venues")
         .insert({ name: trimmed })
         .select("*")
         .single();

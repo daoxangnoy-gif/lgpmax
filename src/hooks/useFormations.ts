@@ -9,7 +9,7 @@ export function useFormations() {
     queryKey: KEY,
     queryFn: async (): Promise<Formation[]> => {
       const { data, error } = await supabase
-        .from("formations")
+        .from("ft_formations")
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -29,10 +29,10 @@ export function useUpsertFormation() {
     }) => {
       if (input.id) {
         const { id, ...rest } = input;
-        const { error } = await supabase.from("formations").update(rest).eq("id", id);
+        const { error } = await supabase.from("ft_formations").update(rest).eq("id", id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("formations").insert(input);
+        const { error } = await supabase.from("ft_formations").insert(input);
         if (error) throw error;
       }
     },
@@ -44,7 +44,7 @@ export function useDeleteFormation() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("formations").delete().eq("id", id);
+      const { error } = await supabase.from("ft_formations").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),

@@ -10,7 +10,7 @@ export function useRegistrations(matchId: string | null) {
     enabled: !!matchId,
     queryFn: async (): Promise<MatchRegistration[]> => {
       const { data, error } = await supabase
-        .from("match_registrations")
+        .from("ft_match_registrations")
         .select("*")
         .eq("match_id", matchId);
       if (error) throw error;
@@ -24,7 +24,7 @@ export function useSetRegistration(matchId: string) {
   return useMutation({
     mutationFn: async (params: { playerId: string; status: RegistrationStatus }) => {
       const { error } = await supabase
-        .from("match_registrations")
+        .from("ft_match_registrations")
         .upsert(
           { match_id: matchId, player_id: params.playerId, status: params.status },
           { onConflict: "match_id,player_id" }
@@ -40,7 +40,7 @@ export function useClearRegistration(matchId: string) {
   return useMutation({
     mutationFn: async (playerId: string) => {
       const { error } = await supabase
-        .from("match_registrations")
+        .from("ft_match_registrations")
         .delete()
         .eq("match_id", matchId)
         .eq("player_id", playerId);

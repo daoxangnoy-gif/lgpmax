@@ -9,7 +9,7 @@ export function usePlayers() {
     queryKey: KEY,
     queryFn: async (): Promise<Player[]> => {
       const { data, error } = await supabase
-        .from("players")
+        .from("ft_players")
         .select("*")
         .order("jersey_number", { ascending: true, nullsFirst: false })
         .order("name", { ascending: true });
@@ -27,10 +27,10 @@ export function useUpsertPlayer() {
     mutationFn: async (input: PlayerInput & { id?: string }) => {
       if (input.id) {
         const { id, ...rest } = input;
-        const { error } = await supabase.from("players").update(rest).eq("id", id);
+        const { error } = await supabase.from("ft_players").update(rest).eq("id", id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("players").insert(input);
+        const { error } = await supabase.from("ft_players").insert(input);
         if (error) throw error;
       }
     },
@@ -42,7 +42,7 @@ export function useDeletePlayer() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("players").delete().eq("id", id);
+      const { error } = await supabase.from("ft_players").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),

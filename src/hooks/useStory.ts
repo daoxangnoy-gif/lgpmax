@@ -11,7 +11,7 @@ export function useStoryPhotos(matchId: string | null) {
     enabled: !!matchId,
     queryFn: async (): Promise<StoryPhoto[]> => {
       const { data, error } = await supabase
-        .from("story_photos")
+        .from("ft_story_photos")
         .select("*")
         .eq("match_id", matchId)
         .order("created_at", { ascending: true });
@@ -25,7 +25,7 @@ export function useAddStoryPhoto(matchId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (params: { photo_url: string; caption?: string }) => {
-      const { error } = await supabase.from("story_photos").insert({
+      const { error } = await supabase.from("ft_story_photos").insert({
         match_id: matchId,
         photo_url: params.photo_url,
         caption: params.caption ?? null,
@@ -40,7 +40,7 @@ export function useDeleteStoryPhoto(matchId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (photo: StoryPhoto) => {
-      const { error } = await supabase.from("story_photos").delete().eq("id", photo.id);
+      const { error } = await supabase.from("ft_story_photos").delete().eq("id", photo.id);
       if (error) throw error;
       await deleteImageByUrl(photo.photo_url);
     },

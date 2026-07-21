@@ -59,8 +59,9 @@ npm run dev         # http://localhost:5180
 | `npm run preview` | ดู build ที่ compile แล้ว |
 
 ## โครงสร้างข้อมูล
-`players` · `venues` · `matches` · `match_registrations` · `story_photos` · `formations`
-รูปภาพเก็บใน Supabase Storage bucket `photos` (เก็บเฉพาะ URL ใน DB)
+ตารางขึ้นต้นด้วย prefix `ft_` (กันชนเมื่ออยู่ใน db เดียวกับแอปอื่น):
+`ft_players` · `ft_venues` · `ft_matches` · `ft_match_registrations` · `ft_story_photos` · `ft_formations`
+รูปภาพเก็บใน Supabase Storage bucket `ft_photos` (เก็บเฉพาะ URL ใน DB)
 
 ## Roadmap (เฟส 2)
 Login + role admin/สมาชิก · สถิติผู้เล่นสะสม · แจ้งเตือนก่อนนัด · หารค่าใช้จ่าย · ปฏิทินรวมนัด ·
