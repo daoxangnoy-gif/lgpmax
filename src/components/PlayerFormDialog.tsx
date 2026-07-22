@@ -13,7 +13,7 @@ const empty = {
   name: "",
   jersey_number: "" as string,
   position: "",
-  status: "available" as PlayerStatus,
+  status: "starter" as PlayerStatus,
   photo_url: null as string | null,
 };
 

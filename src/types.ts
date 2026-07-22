@@ -1,19 +1,15 @@
 // ---------- Domain types ----------
 
-export type PlayerStatus = "available" | "injured" | "unavailable" | "resting";
+export type PlayerStatus = "starter" | "sub";
 
 export const PLAYER_STATUS_LABEL: Record<PlayerStatus, string> = {
-  available: "พร้อมเล่น",
-  injured: "บาดเจ็บ",
-  unavailable: "ไม่สะดวก",
-  resting: "พักทีม",
+  starter: "ตัวจริง",
+  sub: "สำรอง",
 };
 
 export const PLAYER_STATUS_COLOR: Record<PlayerStatus, string> = {
-  available: "bg-emerald-500",
-  injured: "bg-red-500",
-  unavailable: "bg-amber-500",
-  resting: "bg-slate-400",
+  starter: "bg-emerald-500",
+  sub: "bg-slate-400",
 };
 
 /** ตำแหน่งมาตรฐาน (พิมพ์เองได้ด้วย) */

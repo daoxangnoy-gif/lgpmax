@@ -54,9 +54,10 @@ export default function FormationPage() {
 
   function applyPreset(key: string) {
     const slots = buildPreset(key);
+    // จัดตัวจริงลงสนามก่อน แล้วตามด้วยสำรอง
     const available = [
-      ...players.filter((p) => p.status === "available"),
-      ...players.filter((p) => p.status !== "available"),
+      ...players.filter((p) => p.status === "starter"),
+      ...players.filter((p) => p.status !== "starter"),
     ];
     const next: FormationPosition[] = slots.slice(0, available.length).map((slot, i) => ({
       player_id: available[i].id,

@@ -14,7 +14,7 @@ create table if not exists public.ft_players (
   name          text not null,
   jersey_number integer,
   position      text,                       -- GK / DF / MF / FW หรือกำหนดเอง
-  status        text not null default 'available', -- available / injured / unavailable / resting
+  status        text not null default 'starter', -- starter (ตัวจริง) / sub (สำรอง)
   photo_url     text,
   created_at    timestamptz not null default now()
 );
