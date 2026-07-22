@@ -255,15 +255,17 @@ export default function FormationPage() {
         {/* แม่แบบ 6 แบบ (รุก 3 / รับ 3) */}
         {activeSize && (
           <div className="card space-y-3 p-3">
-            {(["รุก", "รับ"] as const).map((tag) => {
+            {([
+              { tag: "รุก", head: "🔴 เน้นรุก" },
+              { tag: "สมดุล", head: "⚪ สมดุล" },
+              { tag: "รับ", head: "🔵 เน้นรับ" },
+            ] as const).map(({ tag, head }) => {
               const sp = SIZE_PRESETS.find((s) => s.key === activeSize)!;
               const tpls = sp.templates.filter((t) => t.tag === tag);
-              const isAtk = tag === "รุก";
+              if (tpls.length === 0) return null;
               return (
                 <div key={tag}>
-                  <div className="mb-1.5 text-xs font-medium text-[hsl(var(--text-muted))]">
-                    {isAtk ? "🔴 เน้นรุก" : "🔵 เน้นรับ"}
-                  </div>
+                  <div className="mb-1.5 text-xs font-medium text-[hsl(var(--text-muted))]">{head}</div>
                   <div className="flex flex-wrap gap-2">
                     {tpls.map((t) => (
                       <button

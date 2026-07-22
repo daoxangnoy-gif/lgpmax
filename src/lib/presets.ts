@@ -4,11 +4,11 @@
 
 export type Slot = { x: number; y: number };
 
-export type FormationTag = "รุก" | "รับ";
+export type FormationTag = "รุก" | "สมดุล" | "รับ";
 
 export interface FormationTemplate {
   key: string; // เช่น "2-2-2"
-  tag: FormationTag; // เน้นรุก/รับ
+  tag: FormationTag;
   lines: number[]; // จำนวนผู้เล่นแต่ละแนว จากรับ → หน้า (ไม่รวม GK)
 }
 
@@ -20,47 +20,44 @@ export interface SizePreset {
 
 function line(count: number, y: number): Slot[] {
   if (count <= 0) return [];
-  return Array.from({ length: count }, (_, i) => ({
-    x: (i + 1) / (count + 1),
-    y,
-  }));
+  return Array.from({ length: count }, (_, i) => ({ x: (i + 1) / (count + 1), y }));
 }
 
-/** สร้างพิกัดช่อง (รวม GK) จากแนวผู้เล่น เช่น [2,3,1] → GK + รับ2/กลาง3/หน้า1 */
+/** สร้างพิกัดช่อง (รวม GK) — กระจายแต่ละแนวให้เต็มความสูงสนาม */
 export function slotsFromLines(lines: number[]): Slot[] {
   const gk: Slot = { x: 0.5, y: 0.92 };
-  const yStops = [0.74, 0.56, 0.38, 0.2]; // แนวรับ → หน้า
   const rows: Slot[] = [];
+  const n = lines.length;
   lines.forEach((count, idx) => {
-    rows.push(...line(count, yStops[idx] ?? 0.2));
+    // แนวรับ y≈0.72 → กองหน้า y≈0.22 (กระจายเท่า ๆ กัน)
+    const y = n === 1 ? 0.5 : 0.72 - (idx / (n - 1)) * (0.72 - 0.22);
+    rows.push(...line(count, y));
   });
   return [gk, ...rows];
 }
 
-// ทีมเล่นแบบ 7 คน / 8 คน (มี GK + ตัวสนาม) — แต่ละขนาดมี 6 แม่แบบ (รุก 3 / รับ 3)
+/** ทุกวิธีแบ่ง total เป็น 3 แนว (แต่ละแนว ≥ 1) — แนวรับ/กลาง/หน้า */
+function compositions3(total: number): number[][] {
+  const out: number[][] = [];
+  for (let d = 1; d <= total - 2; d++) {
+    for (let m = 1; m <= total - d - 1; m++) {
+      const f = total - d - m;
+      if (f >= 1) out.push([d, m, f]);
+    }
+  }
+  return out;
+}
+
+function buildTemplates(outfield: number): FormationTemplate[] {
+  return compositions3(outfield).map(([d, m, f]) => ({
+    key: `${d}-${m}-${f}`,
+    tag: f > d ? "รุก" : d > f ? "รับ" : "สมดุล",
+    lines: [d, m, f],
+  }));
+}
+
+// ทีมเล่นแบบ 7 คน / 8 คน (GK + ตัวสนาม) — สร้างทุกแม่แบบ X-Y-Z ที่เป็นไปได้
 export const SIZE_PRESETS: SizePreset[] = [
-  {
-    key: "6+รับ",
-    label: "แบบ 1 · 6+รับ",
-    templates: [
-      { key: "1-3-2", tag: "รุก", lines: [1, 3, 2] },
-      { key: "2-2-2", tag: "รุก", lines: [2, 2, 2] },
-      { key: "2-1-3", tag: "รุก", lines: [2, 1, 3] },
-      { key: "3-2-1", tag: "รับ", lines: [3, 2, 1] },
-      { key: "4-1-1", tag: "รับ", lines: [4, 1, 1] },
-      { key: "4-2", tag: "รับ", lines: [4, 2] },
-    ],
-  },
-  {
-    key: "7+รับ",
-    label: "แบบ 2 · 7+รับ",
-    templates: [
-      { key: "2-3-2", tag: "รุก", lines: [2, 3, 2] },
-      { key: "3-1-3", tag: "รุก", lines: [3, 1, 3] },
-      { key: "2-2-3", tag: "รุก", lines: [2, 2, 3] },
-      { key: "3-3-1", tag: "รับ", lines: [3, 3, 1] },
-      { key: "4-2-1", tag: "รับ", lines: [4, 2, 1] },
-      { key: "4-3", tag: "รับ", lines: [4, 3] },
-    ],
-  },
+  { key: "6+รับ", label: "แบบ 1 · 6+รับ", templates: buildTemplates(6) },
+  { key: "7+รับ", label: "แบบ 2 · 7+รับ", templates: buildTemplates(7) },
 ];
