@@ -40,7 +40,7 @@ export default function FootballPitch({
   return (
     <div
       ref={pitchRef}
-      className="relative mx-auto aspect-[2/3] w-full max-w-md touch-none select-none overflow-hidden rounded-2xl border-2 border-white/30"
+      className="relative mx-auto aspect-[2/3] w-full max-w-md select-none overflow-hidden rounded-2xl border-2 border-white/30"
       style={{
         background:
           "repeating-linear-gradient(to bottom, #166534 0 8.33%, #15803d 8.33% 16.66%)",
@@ -76,7 +76,7 @@ export default function FootballPitch({
                 <div className="relative">
                   <div
                     onPointerDown={(e) => editable && onTokenPointerDown?.(slot.id, pid!, e)}
-                    className={`flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 bg-brand text-xs font-bold text-white shadow-lg ${
+                    className={`flex h-10 w-10 touch-none items-center justify-center overflow-hidden rounded-full border-2 bg-brand text-xs font-bold text-white shadow-lg ${
                       slot.sub ? "border-yellow-300" : "border-white"
                     } ${editable ? "cursor-grab active:cursor-grabbing" : ""}`}
                   >
