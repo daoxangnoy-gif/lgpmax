@@ -1,58 +1,39 @@
-import { useRef } from "react";
-import { X } from "lucide-react";
-import type { FormationPosition, Player } from "@/types";
+import type { RefObject } from "react";
+import type { Player } from "@/types";
+
+export interface PitchSlot {
+  id: string;
+  x: number;
+  y: number;
+}
 
 /**
- * สนามจำลองแนวตั้ง — วาง token ผู้เล่นด้วยพิกัด normalized (x,y = 0..1)
- * ลากด้วย pointer events (รองรับทั้งเมาส์และ touch) เพื่อวางอิสระ
+ * สนามจำลองแนวตั้ง — แสดง "ช่อง" (วงไกด์ไลน์) ตามแม่แบบที่เลือก
+ * ช่องว่าง = วงประ + เครื่องหมาย +, ช่องมีคน = token ผู้เล่น (ลากออก/ย้ายได้)
+ * การลากจัดการที่ FormationPage (owns drag state) — ที่นี่แค่ report pointerdown
  */
 export default function FootballPitch({
-  positions,
+  pitchRef,
+  slots,
+  assign,
   playersById,
-  onChange,
-  onRemove,
+  onTokenPointerDown,
+  dropTargetId,
+  draggingPlayerId,
   editable = true,
 }: {
-  positions: FormationPosition[];
+  pitchRef: RefObject<HTMLDivElement>;
+  slots: PitchSlot[];
+  assign: Record<string, string>;
   playersById: Record<string, Player>;
-  onChange?: (positions: FormationPosition[]) => void;
-  onRemove?: (playerId: string) => void;
+  onTokenPointerDown?: (slotId: string, playerId: string, e: React.PointerEvent) => void;
+  dropTargetId?: string | null;
+  draggingPlayerId?: string | null;
   editable?: boolean;
 }) {
-  const pitchRef = useRef<HTMLDivElement>(null);
-  const dragging = useRef<string | null>(null);
-
-  function clientToNorm(clientX: number, clientY: number) {
-    const rect = pitchRef.current!.getBoundingClientRect();
-    const x = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-    const y = Math.min(1, Math.max(0, (clientY - rect.top) / rect.height));
-    return { x, y };
-  }
-
-  function onPointerDown(e: React.PointerEvent, playerId: string) {
-    if (!editable) return;
-    e.preventDefault();
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    dragging.current = playerId;
-  }
-
-  function onPointerMove(e: React.PointerEvent) {
-    if (!dragging.current || !onChange) return;
-    const { x, y } = clientToNorm(e.clientX, e.clientY);
-    onChange(
-      positions.map((p) => (p.player_id === dragging.current ? { ...p, x, y } : p))
-    );
-  }
-
-  function onPointerUp() {
-    dragging.current = null;
-  }
-
   return (
     <div
       ref={pitchRef}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
       className="relative mx-auto aspect-[2/3] w-full max-w-md touch-none select-none overflow-hidden rounded-2xl border-2 border-white/30"
       style={{
         background:
@@ -63,45 +44,56 @@ export default function FootballPitch({
       <div className="pointer-events-none absolute inset-3 rounded-lg border-2 border-white/40" />
       <div className="pointer-events-none absolute left-3 right-3 top-1/2 h-0.5 -translate-y-1/2 bg-white/40" />
       <div className="pointer-events-none absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/40" />
-      {/* กรอบเขตโทษบน/ล่าง */}
       <div className="pointer-events-none absolute left-1/2 top-3 h-14 w-2/5 -translate-x-1/2 border-2 border-t-0 border-white/40" />
       <div className="pointer-events-none absolute bottom-3 left-1/2 h-14 w-2/5 -translate-x-1/2 border-2 border-b-0 border-white/40" />
 
-      {positions.map((pos) => {
-        const player = playersById[pos.player_id];
-        if (!player) return null;
-        const initials = player.name.trim().slice(0, 2).toUpperCase();
+      {slots.length === 0 && (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-white/70">
+          เลือก “จัดชุด” ด้านบน แล้วเลือกแม่แบบ เพื่อวางวงไกด์ไลน์
+        </div>
+      )}
+
+      {slots.map((slot) => {
+        const pid = assign[slot.id];
+        const player = pid ? playersById[pid] : null;
+        const isTarget = dropTargetId === slot.id;
         return (
           <div
-            key={pos.player_id}
-            onPointerDown={(e) => onPointerDown(e, pos.player_id)}
-            className={`group absolute z-10 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center ${
-              editable ? "cursor-grab active:cursor-grabbing" : ""
-            }`}
-            style={{ left: `${pos.x * 100}%`, top: `${pos.y * 100}%` }}
+            key={slot.id}
+            className="absolute z-10 -translate-x-1/2 -translate-y-1/2"
+            style={{ left: `${slot.x * 100}%`, top: `${slot.y * 100}%` }}
           >
-            <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-brand text-xs font-bold text-white shadow-lg">
-              {player.photo_url ? (
-                <img src={player.photo_url} alt="" className="h-full w-full object-cover" />
-              ) : player.jersey_number != null ? (
-                `#${player.jersey_number}`
-              ) : (
-                initials
-              )}
-              {editable && onRemove && (
-                <button
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onClick={() => onRemove(pos.player_id)}
-                  className="absolute -right-1.5 -top-1.5 rounded-full bg-red-600 p-0.5 text-white opacity-0 transition group-hover:opacity-100"
-                  aria-label="เอาออก"
-                >
-                  <X size={12} />
-                </button>
-              )}
-            </div>
-            <span className="mt-0.5 max-w-16 truncate rounded bg-black/50 px-1 text-[10px] text-white">
-              {player.name}
-            </span>
+            {player ? (
+              <div
+                onPointerDown={(e) => editable && onTokenPointerDown?.(slot.id, pid!, e)}
+                className={`flex flex-col items-center ${editable ? "cursor-grab active:cursor-grabbing" : ""} ${
+                  draggingPlayerId === pid ? "opacity-30" : ""
+                }`}
+              >
+                <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-brand text-xs font-bold text-white shadow-lg">
+                  {player.photo_url ? (
+                    <img src={player.photo_url} alt="" className="h-full w-full object-cover" />
+                  ) : player.jersey_number != null ? (
+                    `#${player.jersey_number}`
+                  ) : (
+                    player.name.trim().slice(0, 2).toUpperCase()
+                  )}
+                </div>
+                <span className="mt-0.5 max-w-16 truncate rounded bg-black/50 px-1 text-[10px] text-white">
+                  {player.name}
+                </span>
+              </div>
+            ) : (
+              <div
+                className={`flex h-10 w-10 items-center justify-center rounded-full border-2 border-dashed text-lg transition ${
+                  isTarget
+                    ? "scale-125 border-white bg-white/30 text-white"
+                    : "border-white/60 text-white/60"
+                }`}
+              >
+                +
+              </div>
+            )}
           </div>
         );
       })}

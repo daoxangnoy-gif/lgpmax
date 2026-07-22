@@ -77,8 +77,16 @@ export interface FormationPosition {
   y: number; // 0..1 (ประตูเรา→ประตูคู่แข่ง)
 }
 
+/** ช่องกำหนดตำแหน่ง (วงไกด์ไลน์) — player_id = null คือยังว่าง */
+export interface FormationSlot {
+  x: number;
+  y: number;
+  player_id: string | null;
+}
+
 export interface FormationData {
-  positions: FormationPosition[];
+  positions: FormationPosition[]; // เก็บเฉพาะช่องที่มีคน (backward-compat)
+  slots?: FormationSlot[]; // แม่แบบ + การวางตัว (source ใหม่)
 }
 
 export interface Formation {
