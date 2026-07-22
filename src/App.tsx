@@ -10,6 +10,7 @@ import FormationPage from "./pages/FormationPage";
 import LoginPage from "./pages/LoginPage";
 import PendingPage from "./pages/PendingPage";
 import UserAdminPage from "./pages/UserAdminPage";
+import RegisterPage from "./pages/RegisterPage";
 import { useAuth } from "./hooks/useAuth";
 import { MENUS, type MenuKey } from "./lib/auth";
 
@@ -40,6 +41,8 @@ function AppShell() {
           <Route path="/story" element={<Guard menu="story" home={home}><StoryPage /></Guard>} />
           <Route path="/formation" element={<Guard menu="formation" home={home}><FormationPage /></Guard>} />
           {isAdmin && <Route path="/admin" element={<UserAdminPage />} />}
+          {/* ยืนยันลงทะเบียน — เข้าได้ทุกคนที่อนุมัติแล้ว (เป้าหมาย share link) */}
+          <Route path="/register" element={<RegisterPage />} />
           <Route path="/no-access" element={<NoAccess />} />
           <Route path="*" element={<Navigate to={home} replace />} />
         </Routes>

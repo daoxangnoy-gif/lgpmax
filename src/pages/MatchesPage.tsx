@@ -6,8 +6,29 @@ import MatchFormDialog from "@/components/MatchFormDialog";
 import MatchDetailSheet from "@/components/MatchDetailSheet";
 import { useMatches } from "@/hooks/useMatches";
 import { useAuth } from "@/hooks/useAuth";
+import { usePlayers } from "@/hooks/usePlayers";
+import { useRegistrations } from "@/hooks/useRegistrations";
 import { formatMatchWhen, scoreText, venueText } from "@/lib/format";
 import type { Match } from "@/types";
+
+/** รายชื่อคนที่ยืนยันมาแล้ว แสดงในการ์ดนัด */
+function MatchCardAttendees({ matchId }: { matchId: string }) {
+  const { data: players = [] } = usePlayers();
+  const { data: regs = [] } = useRegistrations(matchId);
+  const goingIds = new Set(regs.filter((r) => r.status === "going").map((r) => r.player_id));
+  const going = players.filter((p) => goingIds.has(p.id));
+  if (going.length === 0) return null;
+  return (
+    <div className="mt-2 flex items-center gap-1.5 text-xs">
+      <span className="flex h-5 items-center rounded-full bg-emerald-500/20 px-2 font-bold text-emerald-400">
+        มา {going.length}
+      </span>
+      <span className="truncate text-[hsl(var(--text-muted))]">
+        {going.map((p) => p.name).join(", ")}
+      </span>
+    </div>
+  );
+}
 
 export default function MatchesPage() {
   const { data: matches = [], isLoading, error } = useMatches();
@@ -67,6 +88,7 @@ export default function MatchesPage() {
                   <div className="mt-1 flex items-center gap-1 text-xs text-[hsl(var(--text-muted))]">
                     <MapPin size={13} /> {venueText(m)}
                   </div>
+                  <MatchCardAttendees matchId={m.id} />
                 </div>
                 {score ? (
                   <div className="rounded-xl bg-brand/20 px-3 py-1.5 text-center">

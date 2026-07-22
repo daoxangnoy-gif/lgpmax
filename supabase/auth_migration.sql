@@ -137,6 +137,18 @@ create policy "upd_ft_players" on public.ft_players for update to authenticated
   using (ft_is_admin() or (ft_can('players','edit') and id = ft_my_player()))
   with check (ft_is_admin() or (ft_can('players','edit') and id = ft_my_player()));
 
+-- พิเศษ: ft_match_registrations = ยืนยันการมาของ "ตัวเอง" ได้ (นอกเหนือจากสิทธิ์ matches)
+drop policy if exists "ins_ft_match_registrations" on public.ft_match_registrations;
+drop policy if exists "upd_ft_match_registrations" on public.ft_match_registrations;
+drop policy if exists "del_ft_match_registrations" on public.ft_match_registrations;
+create policy "ins_ft_match_registrations" on public.ft_match_registrations for insert to authenticated
+  with check (ft_can('matches','create') or player_id = ft_my_player());
+create policy "upd_ft_match_registrations" on public.ft_match_registrations for update to authenticated
+  using (ft_can('matches','edit') or player_id = ft_my_player())
+  with check (ft_can('matches','edit') or player_id = ft_my_player());
+create policy "del_ft_match_registrations" on public.ft_match_registrations for delete to authenticated
+  using (ft_can('matches','delete') or player_id = ft_my_player());
+
 -- ---------- RLS: ft_profiles ----------
 alter table public.ft_profiles enable row level security;
 drop policy if exists "sel_ft_profiles" on public.ft_profiles;

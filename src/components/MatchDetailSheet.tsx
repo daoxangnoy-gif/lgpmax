@@ -1,8 +1,10 @@
 import { useMemo } from "react";
 import { Check, X, Pencil } from "lucide-react";
 import Modal from "./Modal";
+import MatchAttendance from "./MatchAttendance";
 import { PlayerAvatar } from "./PlayerCard";
 import { usePlayers } from "@/hooks/usePlayers";
+import { useAuth } from "@/hooks/useAuth";
 import { useClearRegistration, useRegistrations, useSetRegistration } from "@/hooks/useRegistrations";
 import { formatMatchWhen, venueText } from "@/lib/format";
 import type { Match } from "@/types";
@@ -16,6 +18,7 @@ export default function MatchDetailSheet({
   onClose: () => void;
   onEdit: (m: Match) => void;
 }) {
+  const { isAdmin, can } = useAuth();
   const { data: players = [] } = usePlayers();
   const { data: regs = [] } = useRegistrations(match?.id ?? null);
   const setReg = useSetRegistration(match?.id ?? "");
@@ -27,89 +30,72 @@ export default function MatchDetailSheet({
     return m;
   }, [regs]);
 
-  const goingCount = regs.filter((r) => r.status === "going").length;
-
   return (
     <Modal
       open={!!match}
       onClose={onClose}
       title="รายละเอียดนัด"
       footer={
-        match && (
+        match && isAdmin && can("matches", "edit") ? (
           <button className="btn-ghost" onClick={() => onEdit(match)}>
             <Pencil size={16} /> แก้ไขนัด
           </button>
-        )
+        ) : undefined
       }
     >
       {match && (
         <div className="space-y-4">
           <div className="card p-3">
             <div className="text-sm text-[hsl(var(--text-muted))]">{formatMatchWhen(match)}</div>
-            <div className="mt-1 font-semibold">
-              พบ {match.opponent || "— (ยังไม่ระบุคู่แข่ง)"}
-            </div>
+            <div className="mt-1 font-semibold">พบ {match.opponent || "— (ยังไม่ระบุคู่แข่ง)"}</div>
             <div className="text-sm text-[hsl(var(--text-muted))]">{venueText(match)}</div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold">ลงทะเบียนมาแข่ง</h3>
-            <span className="rounded-full bg-brand/20 px-3 py-1 text-sm font-bold text-brand">
-              มา {goingCount} คน
-            </span>
-          </div>
+          {/* ยืนยันของตัวเอง + รายชื่อคนมา + แชร์ (ทุกคน) */}
+          <MatchAttendance match={match} />
 
-          <div className="space-y-2">
-            {players.length === 0 && (
-              <p className="text-center text-sm text-[hsl(var(--text-muted))]">
-                ยังไม่มีผู้เล่น — ไปเพิ่มที่เมนูผู้เล่นก่อน
-              </p>
-            )}
-            {players.map((p) => {
-              const st = regMap[p.id];
-              return (
-                <div key={p.id} className="card flex items-center gap-3 p-2.5">
-                  <PlayerAvatar player={p} size={40} />
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium">
-                      {p.jersey_number != null && (
-                        <span className="text-brand">#{p.jersey_number} </span>
-                      )}
-                      {p.name}
+          {/* จัดการทั้งทีม — แอดมินเท่านั้น */}
+          {isAdmin && players.length > 0 && (
+            <div>
+              <h3 className="mb-2 font-semibold text-[hsl(var(--text-muted))]">จัดการทั้งทีม (แอดมิน)</h3>
+              <div className="space-y-2">
+                {players.map((p) => {
+                  const st = regMap[p.id];
+                  return (
+                    <div key={p.id} className="card flex items-center gap-3 p-2.5">
+                      <PlayerAvatar player={p} size={40} />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-medium">
+                          {p.jersey_number != null && <span className="text-brand">#{p.jersey_number} </span>}
+                          {p.name}
+                        </div>
+                      </div>
+                      <div className="flex gap-1.5">
+                        <button
+                          onClick={() =>
+                            st === "going" ? clearReg.mutate(p.id) : setReg.mutate({ playerId: p.id, status: "going" })
+                          }
+                          className={`btn px-3 py-1.5 ${st === "going" ? "bg-emerald-500 text-white" : "bg-[hsl(var(--surface-2))]"}`}
+                          aria-label="มา"
+                        >
+                          <Check size={16} />
+                        </button>
+                        <button
+                          onClick={() =>
+                            st === "not_going" ? clearReg.mutate(p.id) : setReg.mutate({ playerId: p.id, status: "not_going" })
+                          }
+                          className={`btn px-3 py-1.5 ${st === "not_going" ? "bg-red-500 text-white" : "bg-[hsl(var(--surface-2))]"}`}
+                          aria-label="ไม่มา"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex gap-1.5">
-                    <button
-                      onClick={() =>
-                        st === "going"
-                          ? clearReg.mutate(p.id)
-                          : setReg.mutate({ playerId: p.id, status: "going" })
-                      }
-                      className={`btn px-3 py-1.5 ${
-                        st === "going" ? "bg-emerald-500 text-white" : "bg-[hsl(var(--surface-2))]"
-                      }`}
-                      aria-label="มา"
-                    >
-                      <Check size={16} />
-                    </button>
-                    <button
-                      onClick={() =>
-                        st === "not_going"
-                          ? clearReg.mutate(p.id)
-                          : setReg.mutate({ playerId: p.id, status: "not_going" })
-                      }
-                      className={`btn px-3 py-1.5 ${
-                        st === "not_going" ? "bg-red-500 text-white" : "bg-[hsl(var(--surface-2))]"
-                      }`}
-                      aria-label="ไม่มา"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </Modal>
