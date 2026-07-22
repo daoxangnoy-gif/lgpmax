@@ -1,11 +1,12 @@
 import { supabase } from "./supabase";
+import { uuid } from "./uuid";
 
 const BUCKET = "ft_photos";
 
 /** อัปโหลดไฟล์รูปขึ้น Supabase Storage แล้วคืน public URL */
 export async function uploadImage(file: File, folder = "misc"): Promise<string> {
   const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-  const path = `${folder}/${crypto.randomUUID()}.${ext}`;
+  const path = `${folder}/${uuid()}.${ext}`;
   const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
     cacheControl: "3600",
     upsert: false,

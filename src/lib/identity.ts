@@ -1,13 +1,15 @@
 // identity แบบต่อเครื่อง (v1 ยังไม่มี login) — เก็บใน localStorage
 // เฟส 2 ค่อยผูกกับ Supabase Auth user จริง
 
+import { uuid } from "./uuid";
+
 const ID_KEY = "ft_device_id";
 const NAME_KEY = "ft_display_name";
 
 export function getDeviceId(): string {
   let v = localStorage.getItem(ID_KEY);
   if (!v) {
-    v = crypto.randomUUID();
+    v = uuid();
     localStorage.setItem(ID_KEY, v);
   }
   return v;
