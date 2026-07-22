@@ -82,6 +82,7 @@ export interface FormationSlot {
   x: number;
   y: number;
   player_id: string | null;
+  sub?: boolean; // true = ช่องตัวสำรอง (พื้นเหลือง)
 }
 
 export interface FormationData {

@@ -6,6 +6,7 @@ export interface PitchSlot {
   id: string;
   x: number;
   y: number;
+  sub?: boolean; // true = ช่องตัวสำรอง (พื้นเหลือง)
 }
 
 /**
@@ -20,6 +21,7 @@ export default function FootballPitch({
   playersById,
   onTokenPointerDown,
   onRemovePlayer,
+  onRemoveSlot,
   dropTargetId,
   draggingPlayerId,
   editable = true,
@@ -30,6 +32,7 @@ export default function FootballPitch({
   playersById: Record<string, Player>;
   onTokenPointerDown?: (slotId: string, playerId: string, e: React.PointerEvent) => void;
   onRemovePlayer?: (slotId: string) => void;
+  onRemoveSlot?: (slotId: string) => void;
   dropTargetId?: string | null;
   draggingPlayerId?: string | null;
   editable?: boolean;
@@ -73,9 +76,9 @@ export default function FootballPitch({
                 <div className="relative">
                   <div
                     onPointerDown={(e) => editable && onTokenPointerDown?.(slot.id, pid!, e)}
-                    className={`flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-brand text-xs font-bold text-white shadow-lg ${
-                      editable ? "cursor-grab active:cursor-grabbing" : ""
-                    }`}
+                    className={`flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 bg-brand text-xs font-bold text-white shadow-lg ${
+                      slot.sub ? "border-yellow-300" : "border-white"
+                    } ${editable ? "cursor-grab active:cursor-grabbing" : ""}`}
                   >
                     {player.photo_url ? (
                       <img src={player.photo_url} alt="" className="h-full w-full object-cover" />
@@ -101,14 +104,35 @@ export default function FootballPitch({
                 </span>
               </div>
             ) : (
-              <div
-                className={`flex h-10 w-10 items-center justify-center rounded-full border-2 border-dashed text-lg transition ${
-                  isTarget
-                    ? "scale-125 border-white bg-white/30 text-white"
-                    : "border-white/60 text-white/60"
-                }`}
-              >
-                +
+              <div className="relative flex flex-col items-center">
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-full border-2 border-dashed text-lg transition ${
+                    isTarget
+                      ? slot.sub
+                        ? "scale-125 border-yellow-200 bg-yellow-200/50 text-white"
+                        : "scale-125 border-white bg-white/30 text-white"
+                      : slot.sub
+                        ? "border-yellow-300/80 bg-yellow-300/20 text-yellow-100"
+                        : "border-white/60 text-white/60"
+                  }`}
+                >
+                  +
+                </div>
+                {slot.sub && (
+                  <span className="mt-0.5 rounded bg-yellow-400/80 px-1 text-[9px] font-medium text-black">
+                    สำรอง
+                  </span>
+                )}
+                {editable && slot.sub && onRemoveSlot && (
+                  <button
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => onRemoveSlot(slot.id)}
+                    className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-white bg-red-600 text-white shadow"
+                    aria-label="ลบช่องสำรอง"
+                  >
+                    <X size={12} strokeWidth={3} />
+                  </button>
+                )}
               </div>
             )}
           </div>

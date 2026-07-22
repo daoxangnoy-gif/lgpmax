@@ -56,7 +56,7 @@ export default function FormationPage() {
     setActiveTemplate(null);
     const data = f.data ?? { positions: [] };
     if (data.slots?.length) {
-      const s: PitchSlot[] = data.slots.map((sl, i) => ({ id: `s${i}`, x: sl.x, y: sl.y }));
+      const s: PitchSlot[] = data.slots.map((sl, i) => ({ id: `s${i}`, x: sl.x, y: sl.y, sub: sl.sub }));
       const a: Record<string, string> = {};
       data.slots.forEach((sl, i) => {
         if (sl.player_id) a[`s${i}`] = sl.player_id;
@@ -90,6 +90,25 @@ export default function FormationPage() {
     setAssign({});
     setActiveTemplate(tpl.key);
     setName((n) => (n === "แผนใหม่" ? `${sizeKey} · ${tpl.key}` : n));
+  }
+
+  // ---------- ช่องตัวสำรอง (พื้นเหลือง เกาะกลุ่มด้านล่าง) ----------
+  function addSubSlot() {
+    setSlots((prev) => {
+      const n = prev.filter((s) => s.sub).length;
+      const cols = 5;
+      const x = 0.12 + (n % cols) * 0.16; // เรียงชิดกันแนวนอน
+      const y = 0.985 - Math.floor(n / cols) * 0.09; // ล่างสุด ไล่ขึ้น
+      return [...prev, { id: `sub${Date.now()}_${n}`, x, y, sub: true }];
+    });
+  }
+  function removeSlot(slotId: string) {
+    setSlots((prev) => prev.filter((s) => s.id !== slotId));
+    setAssign((prev) => {
+      const next = { ...prev };
+      delete next[slotId];
+      return next;
+    });
   }
 
   // ---------- Drag & Drop (pointer, รองรับ touch) ----------
@@ -185,7 +204,7 @@ export default function FormationPage() {
   // ---------- บันทึก/ลบ ----------
   async function save() {
     if (!name.trim()) return toast.error("ตั้งชื่อแผนก่อน");
-    const dataSlots = slots.map((s) => ({ x: s.x, y: s.y, player_id: assign[s.id] ?? null }));
+    const dataSlots = slots.map((s) => ({ x: s.x, y: s.y, player_id: assign[s.id] ?? null, sub: s.sub ?? false }));
     const positions = dataSlots
       .filter((s) => s.player_id)
       .map((s) => ({ player_id: s.player_id!, x: s.x, y: s.y }));
@@ -327,9 +346,17 @@ export default function FormationPage() {
               return next;
             })
           }
+          onRemoveSlot={removeSlot}
           dropTargetId={dropTargetId}
           draggingPlayerId={drag?.playerId ?? null}
         />
+
+        {/* เพิ่มช่องตัวสำรอง */}
+        {slots.length > 0 && (
+          <button className="btn-ghost w-full border border-yellow-400/50 text-yellow-200" onClick={addSubSlot}>
+            <Plus size={16} /> เพิ่มช่องตัวสำรอง (พื้นเหลือง)
+          </button>
+        )}
 
         {/* ม้านั่งสำรอง — ลากชื่อไปวางในวง */}
         <div>
