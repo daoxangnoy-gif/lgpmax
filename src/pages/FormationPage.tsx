@@ -320,6 +320,13 @@ export default function FormationPage() {
           assign={assign}
           playersById={playersById}
           onTokenPointerDown={(slotId, playerId, e) => startDrag(playerId, slotId, e)}
+          onRemovePlayer={(slotId) =>
+            setAssign((prev) => {
+              const next = { ...prev };
+              delete next[slotId];
+              return next;
+            })
+          }
           dropTargetId={dropTargetId}
           draggingPlayerId={drag?.playerId ?? null}
         />

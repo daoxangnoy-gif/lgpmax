@@ -1,4 +1,5 @@
 import type { RefObject } from "react";
+import { X } from "lucide-react";
 import type { Player } from "@/types";
 
 export interface PitchSlot {
@@ -18,6 +19,7 @@ export default function FootballPitch({
   assign,
   playersById,
   onTokenPointerDown,
+  onRemovePlayer,
   dropTargetId,
   draggingPlayerId,
   editable = true,
@@ -27,6 +29,7 @@ export default function FootballPitch({
   assign: Record<string, string>;
   playersById: Record<string, Player>;
   onTokenPointerDown?: (slotId: string, playerId: string, e: React.PointerEvent) => void;
+  onRemovePlayer?: (slotId: string) => void;
   dropTargetId?: string | null;
   draggingPlayerId?: string | null;
   editable?: boolean;
@@ -65,18 +68,32 @@ export default function FootballPitch({
           >
             {player ? (
               <div
-                onPointerDown={(e) => editable && onTokenPointerDown?.(slot.id, pid!, e)}
-                className={`flex flex-col items-center ${editable ? "cursor-grab active:cursor-grabbing" : ""} ${
-                  draggingPlayerId === pid ? "opacity-30" : ""
-                }`}
+                className={`flex flex-col items-center ${draggingPlayerId === pid ? "opacity-30" : ""}`}
               >
-                <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-brand text-xs font-bold text-white shadow-lg">
-                  {player.photo_url ? (
-                    <img src={player.photo_url} alt="" className="h-full w-full object-cover" />
-                  ) : player.jersey_number != null ? (
-                    `#${player.jersey_number}`
-                  ) : (
-                    player.name.trim().slice(0, 2).toUpperCase()
+                <div className="relative">
+                  <div
+                    onPointerDown={(e) => editable && onTokenPointerDown?.(slot.id, pid!, e)}
+                    className={`flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-brand text-xs font-bold text-white shadow-lg ${
+                      editable ? "cursor-grab active:cursor-grabbing" : ""
+                    }`}
+                  >
+                    {player.photo_url ? (
+                      <img src={player.photo_url} alt="" className="h-full w-full object-cover" />
+                    ) : player.jersey_number != null ? (
+                      `#${player.jersey_number}`
+                    ) : (
+                      player.name.trim().slice(0, 2).toUpperCase()
+                    )}
+                  </div>
+                  {editable && onRemovePlayer && (
+                    <button
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={() => onRemovePlayer(slot.id)}
+                      className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-white bg-red-600 text-white shadow"
+                      aria-label="เอาผู้เล่นออก"
+                    >
+                      <X size={12} strokeWidth={3} />
+                    </button>
                   )}
                 </div>
                 <span className="mt-0.5 max-w-16 truncate rounded bg-black/50 px-1 text-[10px] text-white">
