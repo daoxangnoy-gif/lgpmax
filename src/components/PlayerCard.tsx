@@ -21,9 +21,11 @@ export function PlayerAvatar({ player, size = 56 }: { player: Player; size?: num
 export default function PlayerCard({
   player,
   onEdit,
+  canEdit = true,
 }: {
   player: Player;
   onEdit: (p: Player) => void;
+  canEdit?: boolean;
 }) {
   return (
     <div className="card flex items-center gap-3 p-3">
@@ -49,13 +51,15 @@ export default function PlayerCard({
           </span>
         </div>
       </div>
-      <button
-        onClick={() => onEdit(player)}
-        className="rounded-lg p-2 text-[hsl(var(--text-muted))] hover:bg-[hsl(var(--surface-2))]"
-        aria-label="แก้ไข"
-      >
-        <Pencil size={18} />
-      </button>
+      {canEdit && (
+        <button
+          onClick={() => onEdit(player)}
+          className="rounded-lg p-2 text-[hsl(var(--text-muted))] hover:bg-[hsl(var(--surface-2))]"
+          aria-label="แก้ไข"
+        >
+          <Pencil size={18} />
+        </button>
+      )}
     </div>
   );
 }

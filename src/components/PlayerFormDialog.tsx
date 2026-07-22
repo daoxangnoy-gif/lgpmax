@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import Modal from "./Modal";
 import ImageUpload from "./ImageUpload";
 import { useDeletePlayer, useUpsertPlayer } from "@/hooks/usePlayers";
+import { useAuth } from "@/hooks/useAuth";
 import { POSITIONS, POSITIONS_FULL, PLAYER_STATUS_LABEL, type Player, type PlayerStatus } from "@/types";
 
 const CUSTOM = "__custom__";
@@ -28,6 +29,8 @@ export default function PlayerFormDialog({
 }) {
   const [form, setForm] = useState(empty);
   const [customPos, setCustomPos] = useState(false);
+  const { isAdmin, can } = useAuth();
+  const canDelete = isAdmin || can("players", "delete");
   const upsert = useUpsertPlayer();
   const del = useDeletePlayer();
 
@@ -88,7 +91,7 @@ export default function PlayerFormDialog({
       title={editing ? "แก้ไขผู้เล่น" : "เพิ่มผู้เล่น"}
       footer={
         <>
-          {editing && (
+          {editing && canDelete && (
             <button className="btn-danger mr-auto" onClick={remove}>
               ลบ
             </button>

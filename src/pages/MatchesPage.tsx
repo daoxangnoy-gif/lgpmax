@@ -5,11 +5,13 @@ import EnvBanner from "@/components/EnvBanner";
 import MatchFormDialog from "@/components/MatchFormDialog";
 import MatchDetailSheet from "@/components/MatchDetailSheet";
 import { useMatches } from "@/hooks/useMatches";
+import { useAuth } from "@/hooks/useAuth";
 import { formatMatchWhen, scoreText, venueText } from "@/lib/format";
 import type { Match } from "@/types";
 
 export default function MatchesPage() {
   const { data: matches = [], isLoading, error } = useMatches();
+  const { can } = useAuth();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Match | null>(null);
   const [detail, setDetail] = useState<Match | null>(null);
@@ -30,9 +32,11 @@ export default function MatchesPage() {
         title="นัดแข่ง"
         subtitle={`ทั้งหมด ${matches.length} นัด`}
         right={
-          <button className="btn-brand" onClick={openNew}>
-            <Plus size={18} /> สร้างนัด
-          </button>
+          can("matches", "create") ? (
+            <button className="btn-brand" onClick={openNew}>
+              <Plus size={18} /> สร้างนัด
+            </button>
+          ) : undefined
         }
       />
       <EnvBanner />

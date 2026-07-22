@@ -7,6 +7,7 @@ import FootballPitch, { type PitchSlot } from "@/components/FootballPitch";
 import { usePlayers } from "@/hooks/usePlayers";
 import { useMatches } from "@/hooks/useMatches";
 import { useDeleteFormation, useFormations, useUpsertFormation } from "@/hooks/useFormations";
+import { useAuth } from "@/hooks/useAuth";
 import { formatThaiDate } from "@/lib/format";
 import { SIZE_PRESETS, slotsFromLines, type FormationTemplate } from "@/lib/presets";
 import type { Formation, Player } from "@/types";
@@ -24,6 +25,8 @@ export default function FormationPage() {
   const { data: players = [] } = usePlayers();
   const { data: matches = [] } = useMatches();
   const { data: formations = [] } = useFormations();
+  const { can } = useAuth();
+  const canSave = can("formation", "create") || can("formation", "edit");
   const upsert = useUpsertFormation();
   const del = useDeleteFormation();
 
@@ -251,9 +254,11 @@ export default function FormationPage() {
         title="แผนการเล่น"
         subtitle="เลือกแม่แบบ แล้วลากชื่อวางในสนาม"
         right={
-          <button className="btn-brand" onClick={save} disabled={upsert.isPending}>
-            <Save size={18} /> บันทึก
-          </button>
+          canSave ? (
+            <button className="btn-brand" onClick={save} disabled={upsert.isPending}>
+              <Save size={18} /> บันทึก
+            </button>
+          ) : undefined
         }
       />
       <EnvBanner />
@@ -418,7 +423,7 @@ export default function FormationPage() {
           )}
         </div>
 
-        {currentId && (
+        {currentId && can("formation", "delete") && (
           <button className="btn-danger w-full" onClick={removeFormation}>
             <Trash2 size={16} /> ลบแผนนี้
           </button>

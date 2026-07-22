@@ -6,6 +6,7 @@ import AppHeader from "@/components/AppHeader";
 import EnvBanner from "@/components/EnvBanner";
 import PostSocial from "@/components/PostSocial";
 import { useMatches, useUpsertMatch } from "@/hooks/useMatches";
+import { useAuth } from "@/hooks/useAuth";
 import { useAddStoryPhoto, useDeleteStoryPhoto, useStoryPhotos } from "@/hooks/useStory";
 import { uploadImage } from "@/lib/storage";
 import { formatMatchWhen, scoreText, venueText } from "@/lib/format";
@@ -53,6 +54,7 @@ export default function StoryPage() {
 
 function MatchPost({ match }: { match: Match }) {
   const { data: photos = [] } = useStoryPhotos(match.id);
+  const { can } = useAuth();
   const addPhoto = useAddStoryPhoto(match.id);
   const delPhoto = useDeleteStoryPhoto(match.id);
   const upsertMatch = useUpsertMatch();
@@ -166,13 +168,15 @@ function MatchPost({ match }: { match: Match }) {
                 <span className="text-sm text-[hsl(var(--text-muted))]">ยังไม่มีผล</span>
               )}
             </div>
-            <button
-              className="rounded-lg p-1.5 text-[hsl(var(--text-muted))] hover:bg-[hsl(var(--surface))]"
-              onClick={() => setEditScore(true)}
-              aria-label="แก้สกอร์"
-            >
-              <Pencil size={16} />
-            </button>
+            {can("story", "edit") && (
+              <button
+                className="rounded-lg p-1.5 text-[hsl(var(--text-muted))] hover:bg-[hsl(var(--surface))]"
+                onClick={() => setEditScore(true)}
+                aria-label="แก้สกอร์"
+              >
+                <Pencil size={16} />
+              </button>
+            )}
           </div>
         ) : (
           <div className="flex items-center justify-center gap-2">
@@ -217,13 +221,15 @@ function MatchPost({ match }: { match: Match }) {
               }`}
             >
               <img src={ph.photo_url} alt={ph.caption ?? ""} className="h-full w-full object-cover" />
-              <button
-                onClick={() => onDelete(ph)}
-                className="absolute right-1 top-1 rounded-lg bg-black/60 p-1.5 text-white opacity-0 transition group-hover:opacity-100"
-                aria-label="ลบรูป"
-              >
-                <Trash2 size={14} />
-              </button>
+              {can("story", "delete") && (
+                <button
+                  onClick={() => onDelete(ph)}
+                  className="absolute right-1 top-1 rounded-lg bg-black/60 p-1.5 text-white opacity-0 transition group-hover:opacity-100"
+                  aria-label="ลบรูป"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -231,6 +237,7 @@ function MatchPost({ match }: { match: Match }) {
 
       {/* เพิ่มรูป */}
       <div className="p-3">
+        {can("story", "create") && (
         <button
           className="btn-ghost w-full"
           onClick={() => fileRef.current?.click()}
@@ -239,6 +246,7 @@ function MatchPost({ match }: { match: Match }) {
           {uploading ? <Loader2 size={16} className="animate-spin" /> : <ImagePlus size={16} />}
           เพิ่มรูปไฮไลต์
         </button>
+        )}
         <input
           ref={fileRef}
           type="file"

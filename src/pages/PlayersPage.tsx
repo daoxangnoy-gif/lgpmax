@@ -5,12 +5,15 @@ import EnvBanner from "@/components/EnvBanner";
 import PlayerCard from "@/components/PlayerCard";
 import PlayerFormDialog from "@/components/PlayerFormDialog";
 import { usePlayers } from "@/hooks/usePlayers";
+import { useAuth } from "@/hooks/useAuth";
 import { PLAYER_STATUS_LABEL, POSITIONS, type Player, type PlayerStatus } from "@/types";
 
 const STATUSES = Object.keys(PLAYER_STATUS_LABEL) as PlayerStatus[];
 
 export default function PlayersPage() {
   const { data: players = [], isLoading, error } = usePlayers();
+  const { can, isAdmin, myPlayerId } = useAuth();
+  const canEditPlayer = (p: Player) => isAdmin || (can("players", "edit") && p.id === myPlayerId);
   const [search, setSearch] = useState("");
   const [posFilter, setPosFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<PlayerStatus | null>(null);
@@ -41,9 +44,11 @@ export default function PlayersPage() {
         title="ผู้เล่น"
         subtitle={`ทั้งหมด ${players.length} คน`}
         right={
-          <button className="btn-brand" onClick={openNew}>
-            <Plus size={18} /> เพิ่ม
-          </button>
+          can("players", "create") ? (
+            <button className="btn-brand" onClick={openNew}>
+              <Plus size={18} /> เพิ่ม
+            </button>
+          ) : undefined
         }
       />
       <EnvBanner />
@@ -106,7 +111,7 @@ export default function PlayersPage() {
 
         <div className="space-y-2">
           {filtered.map((p) => (
-            <PlayerCard key={p.id} player={p} onEdit={openEdit} />
+            <PlayerCard key={p.id} player={p} onEdit={openEdit} canEdit={canEditPlayer(p)} />
           ))}
         </div>
       </div>
