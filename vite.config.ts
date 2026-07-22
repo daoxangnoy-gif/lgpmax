@@ -15,7 +15,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.svg", "apple-touch-icon.png", "icon.svg"],
+      includeAssets: ["favicon-32.png", "apple-touch-icon.png", "logo.png"],
       manifest: {
         name: "LLGP Football Club — LGP MAX",
         short_name: "LGP MAX",

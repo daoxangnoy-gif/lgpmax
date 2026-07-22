@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import BottomNav from "./components/BottomNav";
 import PageTransition from "./components/PageTransition";
+import SplashScreen from "./components/SplashScreen";
 import PlayersPage from "./pages/PlayersPage";
 import MatchesPage from "./pages/MatchesPage";
 import StoryPage from "./pages/StoryPage";
@@ -10,6 +11,7 @@ export default function App() {
   const location = useLocation();
   return (
     <div className="min-h-full pb-20">
+      <SplashScreen />
       {/* key ต่อ path เพื่อเล่น enter-animation ซ้ำทุกครั้งที่เปลี่ยนแท็บ
           (ไม่ใช้ AnimatePresence mode="wait" เพราะ deadlock กับ StrictMode) */}
       <PageTransition key={location.pathname}>
