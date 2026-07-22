@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Plus, Save, Trash2, Wand2 } from "lucide-react";
+import { Plus, RotateCcw, Save, Trash2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import AppHeader from "@/components/AppHeader";
 import EnvBanner from "@/components/EnvBanner";
@@ -16,6 +16,10 @@ interface Drag {
   fromSlotId: string | null; // null = ลากมาจากม้านั่ง
 }
 
+function homeFrom(s: PitchSlot[]): Record<string, { x: number; y: number }> {
+  return Object.fromEntries(s.map((sl) => [sl.id, { x: sl.x, y: sl.y }]));
+}
+
 export default function FormationPage() {
   const { data: players = [] } = usePlayers();
   const { data: matches = [] } = useMatches();
@@ -30,6 +34,7 @@ export default function FormationPage() {
   const [matchId, setMatchId] = useState<string | null>(null);
   const [slots, setSlots] = useState<PitchSlot[]>([]);
   const [assign, setAssign] = useState<Record<string, string>>({});
+  const [home, setHome] = useState<Record<string, { x: number; y: number }>>({}); // ตำแหน่งเริ่มต้นของแต่ละช่อง
 
   const [activeSize, setActiveSize] = useState<string | null>(null);
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
@@ -63,6 +68,7 @@ export default function FormationPage() {
       });
       setSlots(s);
       setAssign(a);
+      setHome(homeFrom(s));
     } else {
       // เก่า: มีแต่ positions ที่มีคน
       const s: PitchSlot[] = data.positions.map((p, i) => ({ id: `s${i}`, x: p.x, y: p.y }));
@@ -70,6 +76,7 @@ export default function FormationPage() {
       data.positions.forEach((p, i) => (a[`s${i}`] = p.player_id));
       setSlots(s);
       setAssign(a);
+      setHome(homeFrom(s));
     }
   }
 
@@ -79,6 +86,7 @@ export default function FormationPage() {
     setMatchId(null);
     setSlots([]);
     setAssign({});
+    setHome({});
     setActiveSize(null);
     setActiveTemplate(null);
   }
@@ -88,19 +96,20 @@ export default function FormationPage() {
     const s: PitchSlot[] = slotsFromLines(tpl.lines).map((sl, i) => ({ id: `s${i}`, x: sl.x, y: sl.y }));
     setSlots(s);
     setAssign({});
+    setHome(homeFrom(s));
     setActiveTemplate(tpl.key);
     setName((n) => (n === "แผนใหม่" ? `${sizeKey} · ${tpl.key}` : n));
   }
 
   // ---------- ช่องตัวสำรอง (พื้นเหลือง เกาะกลุ่มด้านล่าง) ----------
   function addSubSlot() {
-    setSlots((prev) => {
-      const n = prev.filter((s) => s.sub).length;
-      const cols = 5;
-      const x = 0.12 + (n % cols) * 0.16; // เรียงชิดกันแนวนอน
-      const y = 0.985 - Math.floor(n / cols) * 0.09; // ล่างสุด ไล่ขึ้น
-      return [...prev, { id: `sub${Date.now()}_${n}`, x, y, sub: true }];
-    });
+    const n = slots.filter((s) => s.sub).length;
+    const cols = 5;
+    const x = 0.12 + (n % cols) * 0.16; // เรียงชิดกันแนวนอน
+    const y = 0.985 - Math.floor(n / cols) * 0.09; // ล่างสุด ไล่ขึ้น
+    const id = `sub${Date.now()}_${n}`;
+    setSlots((prev) => [...prev, { id, x, y, sub: true }]);
+    setHome((h) => ({ ...h, [id]: { x, y } }));
   }
   function removeSlot(slotId: string) {
     setSlots((prev) => prev.filter((s) => s.id !== slotId));
@@ -109,6 +118,11 @@ export default function FormationPage() {
       delete next[slotId];
       return next;
     });
+  }
+
+  /** กลับตำแหน่งทุกช่องเป็นค่าเริ่มต้น (คงคนที่วางไว้) */
+  function resetToDefault() {
+    setSlots((prev) => prev.map((s) => (home[s.id] ? { ...s, x: home[s.id].x, y: home[s.id].y } : s)));
   }
 
   // ---------- Drag & Drop (pointer, รองรับ touch) ----------
@@ -351,11 +365,19 @@ export default function FormationPage() {
           draggingPlayerId={drag?.playerId ?? null}
         />
 
-        {/* เพิ่มช่องตัวสำรอง */}
+        {/* ปุ่มจัดการสนาม */}
         {slots.length > 0 && (
-          <button className="btn-ghost w-full border border-yellow-400/50 text-yellow-200" onClick={addSubSlot}>
-            <Plus size={16} /> เพิ่มช่องตัวสำรอง (พื้นเหลือง)
-          </button>
+          <div className="space-y-2">
+            <button className="btn-ghost w-full" onClick={resetToDefault}>
+              <RotateCcw size={16} /> กลับตำแหน่งเริ่มต้น (default)
+            </button>
+            <button
+              className="btn-ghost w-full border border-yellow-400/50 text-yellow-200"
+              onClick={addSubSlot}
+            >
+              <Plus size={16} /> เพิ่มช่องตัวสำรอง (พื้นเหลือง)
+            </button>
+          </div>
         )}
 
         {/* ม้านั่งสำรอง — ลากชื่อไปวางในวง */}
