@@ -49,6 +49,18 @@ export interface Match {
   opponent: string | null;
   score_us: number | null;
   score_opponent: number | null;
+  cost: number;
+  created_at: string;
+}
+
+export interface MatchStat {
+  id: string;
+  match_id: string;
+  player_id: string;
+  goals: number;
+  assists: number;
+  yellow: number;
+  red: number;
   created_at: string;
 }
 

@@ -2,12 +2,15 @@ import { useSearchParams } from "react-router-dom";
 import { MapPin } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
 import MatchAttendance from "@/components/MatchAttendance";
+import MatchCostBox from "@/components/MatchCostBox";
+import { useAuth } from "@/hooks/useAuth";
 import { useMatches } from "@/hooks/useMatches";
 import { formatMatchWhen, venueText } from "@/lib/format";
 
 /** หน้ายืนยันลงทะเบียน (เป้าหมายของ share link #/register?m=<id>) */
 export default function RegisterPage() {
   const [sp] = useSearchParams();
+  const { can } = useAuth();
   const id = sp.get("m");
   const { data: matches = [], isLoading } = useMatches();
   const match = matches.find((m) => m.id === id) ?? null;
@@ -32,6 +35,7 @@ export default function RegisterPage() {
               </div>
             </div>
             <MatchAttendance match={match} />
+            <MatchCostBox match={match} canEdit={can("matches", "edit")} />
           </>
         )}
       </div>

@@ -2,6 +2,8 @@ import { useMemo } from "react";
 import { Check, X, Pencil } from "lucide-react";
 import Modal from "./Modal";
 import MatchAttendance from "./MatchAttendance";
+import MatchCostBox from "./MatchCostBox";
+import MatchStatsEditor from "./MatchStatsEditor";
 import { PlayerAvatar } from "./PlayerCard";
 import { usePlayers } from "@/hooks/usePlayers";
 import { useAuth } from "@/hooks/useAuth";
@@ -53,6 +55,20 @@ export default function MatchDetailSheet({
 
           {/* ยืนยันของตัวเอง + รายชื่อคนมา + แชร์ (ทุกคน) */}
           <MatchAttendance match={match} />
+
+          {/* หารค่าใช้จ่าย (ทุกคนเห็นส่วนแบ่ง, แก้ได้ถ้ามีสิทธิ์) */}
+          <MatchCostBox match={match} canEdit={can("matches", "edit")} />
+
+          {/* บันทึกสถิติผู้เล่นในนัด (เฉพาะคนแก้ไขนัดได้) */}
+          {can("matches", "edit") && (
+            <div>
+              <h3 className="mb-2 font-semibold text-[hsl(var(--text-muted))]">บันทึกสถิติ (คนที่มา)</h3>
+              <MatchStatsEditor
+                matchId={match.id}
+                players={players.filter((p) => regMap[p.id] === "going")}
+              />
+            </div>
+          )}
 
           {/* จัดการทั้งทีม — แอดมินเท่านั้น */}
           {isAdmin && players.length > 0 && (
