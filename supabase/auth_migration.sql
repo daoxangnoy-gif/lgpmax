@@ -79,6 +79,24 @@ $$;
 grant execute on function public.ft_is_approved(), public.ft_is_admin(),
   public.ft_my_player(), public.ft_can(text, text) to anon, authenticated;
 
+-- แอดมินตั้งรหัสผ่านใหม่ให้ผู้ใช้ (เช็คสิทธิ์ในฟังก์ชัน, อัปเดต auth.users โดยตรง)
+create or replace function public.ft_admin_set_password(_user_id uuid, _new_password text)
+returns void language plpgsql security definer set search_path = public, extensions, auth as $$
+begin
+  if not ft_is_admin() then
+    raise exception 'ต้องเป็นแอดมินเท่านั้น';
+  end if;
+  if length(_new_password) < 6 then
+    raise exception 'รหัสผ่านอย่างน้อย 6 ตัว';
+  end if;
+  update auth.users
+    set encrypted_password = crypt(_new_password, gen_salt('bf')),
+        updated_at = now()
+  where id = _user_id;
+end;
+$$;
+grant execute on function public.ft_admin_set_password(uuid, text) to authenticated;
+
 -- ---------- RLS: rewrite ทุกตาราง ft_* (authenticated + สิทธิ์) ----------
 do $$
 declare r record;

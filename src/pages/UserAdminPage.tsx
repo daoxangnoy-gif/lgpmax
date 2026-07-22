@@ -89,6 +89,7 @@ function ProfileCard({
   const [role, setRole] = useState<Profile["role"]>(profile.role);
   const [playerId, setPlayerId] = useState<string | null>(profile.player_id);
   const [perms, setPerms] = useState<Perms>(mergePerms(profile.perms));
+  const [newPassword, setNewPassword] = useState("");
   const isSelf = me?.user_id === profile.user_id;
 
   const linkedName = useMemo(
@@ -109,6 +110,15 @@ function ProfileCard({
 
   async function save(extra?: Partial<Profile>) {
     try {
+      if (newPassword.trim()) {
+        if (newPassword.length < 6) return toast.error("รหัสผ่านอย่างน้อย 6 ตัว");
+        const { error } = await supabase.rpc("ft_admin_set_password", {
+          _user_id: profile.user_id,
+          _new_password: newPassword,
+        });
+        if (error) throw error;
+        setNewPassword("");
+      }
       await mutation.mutateAsync({ role, player_id: playerId, perms, ...extra });
       toast.success("บันทึกแล้ว");
     } catch (e) {
@@ -229,6 +239,19 @@ function ProfileCard({
               </div>
             </div>
           )}
+
+          {/* เปลี่ยนรหัสผ่าน */}
+          <div>
+            <label className="label">เปลี่ยนรหัสผ่าน (เว้นว่าง = ไม่เปลี่ยน)</label>
+            <input
+              className="input"
+              type="text"
+              value={newPassword}
+              autoComplete="off"
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="รหัสผ่านใหม่ (อย่างน้อย 6 ตัว)"
+            />
+          </div>
 
           {/* actions */}
           <div className="flex flex-wrap gap-2">
