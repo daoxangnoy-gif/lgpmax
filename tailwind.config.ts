@@ -11,6 +11,7 @@ export default {
           fg: "hsl(var(--brand-fg))",
           dark: "hsl(var(--brand-dark))",
         },
+        silver: "hsl(var(--silver))",
       },
       fontFamily: {
         sans: ["'Noto Sans Thai'", "system-ui", "-apple-system", "Segoe UI", "sans-serif"],
