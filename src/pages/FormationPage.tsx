@@ -8,7 +8,7 @@ import { usePlayers } from "@/hooks/usePlayers";
 import { useMatches } from "@/hooks/useMatches";
 import { useDeleteFormation, useFormations, useUpsertFormation } from "@/hooks/useFormations";
 import { formatThaiDate } from "@/lib/format";
-import { buildPreset, PRESETS } from "@/lib/presets";
+import { buildPreset, PRESETS, type Preset } from "@/lib/presets";
 import type { Formation, FormationPosition, Player } from "@/types";
 
 export default function FormationPage() {
@@ -52,8 +52,8 @@ export default function FormationPage() {
     setPositions((prev) => prev.filter((p) => p.player_id !== playerId));
   }
 
-  function applyPreset(key: string) {
-    const slots = buildPreset(key);
+  function applyPreset(preset: Preset) {
+    const slots = buildPreset(preset.lines);
     // จัดตัวจริงลงสนามก่อน แล้วตามด้วยสำรอง
     const available = [
       ...players.filter((p) => p.status === "starter"),
@@ -65,7 +65,7 @@ export default function FormationPage() {
       y: slot.y,
     }));
     setPositions(next);
-    setName((n) => (n === "แผนใหม่" ? key : n));
+    setName((n) => (n === "แผนใหม่" ? preset.key : n));
   }
 
   async function save() {
@@ -150,8 +150,8 @@ export default function FormationPage() {
             <Wand2 size={14} /> จัดชุด:
           </span>
           {PRESETS.map((p) => (
-            <button key={p.key} className="chip" onClick={() => applyPreset(p.key)}>
-              {p.key}
+            <button key={p.key} className="chip" onClick={() => applyPreset(p)}>
+              {p.label}
             </button>
           ))}
         </div>
