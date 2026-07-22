@@ -13,9 +13,7 @@ import type { Formation, Player } from "@/types";
 
 interface Drag {
   playerId: string;
-  fromSlotId: string | null;
-  x: number;
-  y: number;
+  fromSlotId: string | null; // null = ลากมาจากม้านั่ง
 }
 
 export default function FormationPage() {
@@ -38,6 +36,8 @@ export default function FormationPage() {
 
   const [drag, setDrag] = useState<Drag | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+  const dragPos = useRef({ x: 0, y: 0 }); // ตำแหน่ง pointer ปัจจุบัน (เลี่ยง re-render ทุก move)
+  const ghostRef = useRef<HTMLDivElement>(null);
 
   const playersById = useMemo(
     () => Object.fromEntries(players.map((p) => [p.id, p])) as Record<string, Player>,
@@ -95,17 +95,28 @@ export default function FormationPage() {
   // ---------- Drag & Drop (pointer, รองรับ touch) ----------
   function startDrag(playerId: string, fromSlotId: string | null, e: React.PointerEvent) {
     e.preventDefault();
-    setDrag({ playerId, fromSlotId, x: e.clientX, y: e.clientY });
+    dragPos.current = { x: e.clientX, y: e.clientY };
+    setDrag({ playerId, fromSlotId });
   }
 
   useEffect(() => {
     if (!drag) return;
-    function nearest(cx: number, cy: number): string | null {
+    const fromBench = drag.fromSlotId === null;
+
+    function moveGhost() {
+      if (ghostRef.current) {
+        ghostRef.current.style.left = `${dragPos.current.x}px`;
+        ghostRef.current.style.top = `${dragPos.current.y}px`;
+      }
+    }
+    // วงว่างที่ใกล้สุด (ใช้ตอนลากจากม้านั่ง)
+    function nearestEmpty(cx: number, cy: number): string | null {
       const rect = pitchRef.current?.getBoundingClientRect();
       if (!rect) return null;
       let best: string | null = null;
       let bestD = Infinity;
       for (const s of slots) {
+        if (assign[s.id]) continue;
         const sx = rect.left + s.x * rect.width;
         const sy = rect.top + s.y * rect.height;
         const d = Math.hypot(cx - sx, cy - sy);
@@ -114,33 +125,53 @@ export default function FormationPage() {
           best = s.id;
         }
       }
-      return bestD < rect.width * 0.16 ? best : null;
+      return bestD < rect.width * 0.18 ? best : null;
     }
+    function pitchXY(cx: number, cy: number) {
+      const rect = pitchRef.current!.getBoundingClientRect();
+      const inside = cx >= rect.left && cx <= rect.right && cy >= rect.top && cy <= rect.bottom;
+      return {
+        inside,
+        x: Math.min(1, Math.max(0, (cx - rect.left) / rect.width)),
+        y: Math.min(1, Math.max(0, (cy - rect.top) / rect.height)),
+      };
+    }
+
+    moveGhost();
     function onMove(e: PointerEvent) {
-      setDrag((d) => (d ? { ...d, x: e.clientX, y: e.clientY } : d));
-      setDropTargetId(nearest(e.clientX, e.clientY));
+      dragPos.current = { x: e.clientX, y: e.clientY };
+      moveGhost();
+      if (fromBench) {
+        const t = nearestEmpty(e.clientX, e.clientY);
+        setDropTargetId((prev) => (prev === t ? prev : t));
+      }
     }
     function onUp(e: PointerEvent) {
-      const target = nearest(e.clientX, e.clientY);
-      setDrag((d) => {
-        if (!d) return null;
+      if (fromBench) {
+        // ม้านั่ง → วางลงวงว่างที่ใกล้สุด
+        const target = nearestEmpty(e.clientX, e.clientY);
         if (target) {
           setAssign((prev) => {
             const next = { ...prev };
-            for (const k in next) if (next[k] === d.playerId) delete next[k];
-            next[target] = d.playerId; // แทนที่คนเดิมในช่อง (ถ้ามี → เด้งลงม้านั่ง)
-            return next;
-          });
-        } else if (d.fromSlotId) {
-          // ลากออกนอกช่อง → เอาลงม้านั่ง
-          setAssign((prev) => {
-            const next = { ...prev };
-            delete next[d.fromSlotId!];
+            for (const k in next) if (next[k] === drag!.playerId) delete next[k];
+            next[target] = drag!.playerId;
             return next;
           });
         }
-        return null;
-      });
+      } else {
+        // token ที่วางแล้ว → ย้ายอิสระ (วางตรงไหนก็ได้), ออกนอกสนาม = กลับม้านั่ง
+        const { inside, x, y } = pitchXY(e.clientX, e.clientY);
+        if (inside) {
+          setSlots((prev) => prev.map((s) => (s.id === drag!.fromSlotId ? { ...s, x, y } : s)));
+        } else {
+          setAssign((prev) => {
+            const next = { ...prev };
+            delete next[drag!.fromSlotId!];
+            return next;
+          });
+        }
+      }
+      setDrag(null);
       setDropTargetId(null);
     }
     window.addEventListener("pointermove", onMove);
@@ -149,7 +180,7 @@ export default function FormationPage() {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
     };
-  }, [drag, slots]);
+  }, [drag, slots, assign]);
 
   // ---------- บันทึก/ลบ ----------
   async function save() {
@@ -288,7 +319,7 @@ export default function FormationPage() {
           slots={slots}
           assign={assign}
           playersById={playersById}
-          onTokenPointerDown={startDrag}
+          onTokenPointerDown={(slotId, playerId, e) => startDrag(playerId, slotId, e)}
           dropTargetId={dropTargetId}
           draggingPlayerId={drag?.playerId ?? null}
         />
@@ -341,8 +372,9 @@ export default function FormationPage() {
       {/* ghost ตอนลาก */}
       {drag && dragPlayer && (
         <div
+          ref={ghostRef}
           className="pointer-events-none fixed z-[80] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-brand px-3 py-2 text-xs font-bold text-white shadow-xl"
-          style={{ left: drag.x, top: drag.y }}
+          style={{ left: dragPos.current.x, top: dragPos.current.y }}
         >
           {dragPlayer.jersey_number != null ? `#${dragPlayer.jersey_number} ` : ""}
           {dragPlayer.name}
