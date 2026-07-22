@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Plus, RotateCcw, Save, Trash2, Wand2 } from "lucide-react";
+import { Eye, EyeOff, Plus, RotateCcw, Save, Trash2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import AppHeader from "@/components/AppHeader";
 import EnvBanner from "@/components/EnvBanner";
@@ -44,6 +44,7 @@ export default function FormationPage() {
 
   const [drag, setDrag] = useState<Drag | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+  const [showRemove, setShowRemove] = useState(true); // แสดง/ซ่อน ปุ่ม ×
   const dragPos = useRef({ x: 0, y: 0 }); // ตำแหน่ง pointer ปัจจุบัน (เลี่ยง re-render ทุก move)
   const ghostRef = useRef<HTMLDivElement>(null);
 
@@ -368,14 +369,21 @@ export default function FormationPage() {
           onRemoveSlot={removeSlot}
           dropTargetId={dropTargetId}
           draggingPlayerId={drag?.playerId ?? null}
+          showRemove={showRemove}
         />
 
         {/* ปุ่มจัดการสนาม */}
         {slots.length > 0 && (
           <div className="space-y-2">
-            <button className="btn-ghost w-full" onClick={resetToDefault}>
-              <RotateCcw size={16} /> กลับตำแหน่งเริ่มต้น (default)
-            </button>
+            <div className="grid grid-cols-2 gap-2">
+              <button className="btn-ghost" onClick={() => setShowRemove((s) => !s)}>
+                {showRemove ? <EyeOff size={16} /> : <Eye size={16} />}
+                {showRemove ? "ซ่อนปุ่ม ×" : "แสดงปุ่ม ×"}
+              </button>
+              <button className="btn-ghost" onClick={resetToDefault}>
+                <RotateCcw size={16} /> ตำแหน่งเริ่มต้น
+              </button>
+            </div>
             <button
               className="btn-ghost w-full border border-yellow-400/50 text-yellow-200"
               onClick={addSubSlot}

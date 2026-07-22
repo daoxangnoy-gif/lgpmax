@@ -25,6 +25,7 @@ export default function FootballPitch({
   dropTargetId,
   draggingPlayerId,
   editable = true,
+  showRemove = true,
 }: {
   pitchRef: RefObject<HTMLDivElement>;
   slots: PitchSlot[];
@@ -36,6 +37,7 @@ export default function FootballPitch({
   dropTargetId?: string | null;
   draggingPlayerId?: string | null;
   editable?: boolean;
+  showRemove?: boolean;
 }) {
   return (
     <div
@@ -88,7 +90,7 @@ export default function FootballPitch({
                       player.name.trim().slice(0, 2).toUpperCase()
                     )}
                   </div>
-                  {editable && onRemovePlayer && (
+                  {editable && showRemove && onRemovePlayer && (
                     <button
                       onPointerDown={(e) => e.stopPropagation()}
                       onClick={() => onRemovePlayer(slot.id)}
@@ -123,7 +125,7 @@ export default function FootballPitch({
                     สำรอง
                   </span>
                 )}
-                {editable && slot.sub && onRemoveSlot && (
+                {editable && showRemove && slot.sub && onRemoveSlot && (
                   <button
                     onPointerDown={(e) => e.stopPropagation()}
                     onClick={() => onRemoveSlot(slot.id)}
