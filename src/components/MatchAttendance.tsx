@@ -1,4 +1,5 @@
-import { Check, Loader2, Share2, X } from "lucide-react";
+import { useState } from "react";
+import { Check, ChevronDown, Loader2, Share2, X } from "lucide-react";
 import { shareLink } from "@/lib/share";
 import { PlayerAvatar } from "./PlayerCard";
 import { usePlayers } from "@/hooks/usePlayers";
@@ -17,6 +18,14 @@ export default function MatchAttendance({ match }: { match: Match }) {
 
   const myPlayer = players.find((p) => p.id === myPlayerId) ?? null;
   const myStatus = regs.find((r) => r.player_id === myPlayerId)?.status ?? null;
+  const [expanded, setExpanded] = useState(false);
+  const collapsed = !!myStatus && !expanded; // ยืนยันแล้ว → หุบ
+
+  function choose(status: "going" | "not_going") {
+    if (!myPlayer) return;
+    setReg.mutate({ playerId: myPlayer.id, status });
+    setExpanded(false);
+  }
 
   const goingIds = new Set(regs.filter((r) => r.status === "going").map((r) => r.player_id));
   const goingPlayers = players.filter((p) => goingIds.has(p.id));
@@ -34,7 +43,34 @@ export default function MatchAttendance({ match }: { match: Match }) {
       {/* ยืนยันของตัวเอง — เห็นแค่ชื่อตัวเอง */}
       <div className="card p-3">
         <div className="mb-2 text-sm font-semibold">ยืนยันการมาแข่งของคุณ</div>
-        {myPlayer ? (
+        {!myPlayer ? (
+          <p className="text-sm text-[hsl(var(--text-muted))]">
+            บัญชีของคุณยังไม่ได้ผูกกับนักเตะ — ให้แอดมินผูกให้ก่อนถึงจะยืนยันได้
+          </p>
+        ) : collapsed ? (
+          // ยืนยันแล้ว → หุบ (แตะเพื่อเปลี่ยน)
+          <button
+            onClick={() => setExpanded(true)}
+            className="flex w-full items-center gap-3 text-left"
+          >
+            <PlayerAvatar player={myPlayer} size={40} />
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-medium">
+                {myPlayer.jersey_number != null && <span className="text-brand">#{myPlayer.jersey_number} </span>}
+                {myPlayer.name}
+              </div>
+              <div className="text-xs text-[hsl(var(--text-muted))]">แตะเพื่อเปลี่ยน</div>
+            </div>
+            <span
+              className={`rounded-full px-3 py-1 text-xs font-bold ${
+                myStatus === "going" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
+              }`}
+            >
+              {myStatus === "going" ? "✓ มาแล้ว" : "ไม่มา"}
+            </span>
+            <ChevronDown size={18} className="text-[hsl(var(--text-muted))]" />
+          </button>
+        ) : (
           <div className="flex items-center gap-3">
             <PlayerAvatar player={myPlayer} size={44} />
             <div className="min-w-0 flex-1">
@@ -42,21 +78,19 @@ export default function MatchAttendance({ match }: { match: Match }) {
                 {myPlayer.jersey_number != null && <span className="text-brand">#{myPlayer.jersey_number} </span>}
                 {myPlayer.name}
               </div>
-              <div className="text-xs text-[hsl(var(--text-muted))]">
-                {myStatus === "going" ? "คุณยืนยันมาแล้ว" : myStatus === "not_going" ? "คุณแจ้งไม่มา" : "ยังไม่ยืนยัน"}
-              </div>
+              <div className="text-xs text-[hsl(var(--text-muted))]">เลือกการมาแข่ง</div>
             </div>
             <div className="flex gap-1.5">
               <button
                 disabled={busy}
-                onClick={() => setReg.mutate({ playerId: myPlayer.id, status: "going" })}
+                onClick={() => choose("going")}
                 className={`btn px-3 py-2 ${myStatus === "going" ? "bg-emerald-500 text-white" : "bg-[hsl(var(--surface-2))]"}`}
               >
                 <Check size={16} /> มา
               </button>
               <button
                 disabled={busy}
-                onClick={() => setReg.mutate({ playerId: myPlayer.id, status: "not_going" })}
+                onClick={() => choose("not_going")}
                 className={`btn px-3 py-2 ${myStatus === "not_going" ? "bg-red-500 text-white" : "bg-[hsl(var(--surface-2))]"}`}
               >
                 <X size={16} /> ไม่มา
@@ -64,10 +98,6 @@ export default function MatchAttendance({ match }: { match: Match }) {
               {busy && <Loader2 size={16} className="mt-2 animate-spin" />}
             </div>
           </div>
-        ) : (
-          <p className="text-sm text-[hsl(var(--text-muted))]">
-            บัญชีของคุณยังไม่ได้ผูกกับนักเตะ — ให้แอดมินผูกให้ก่อนถึงจะยืนยันได้
-          </p>
         )}
       </div>
 
