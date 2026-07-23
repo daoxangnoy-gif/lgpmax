@@ -63,11 +63,26 @@ function MatchPost({ match }: { match: Match }) {
   const [editScore, setEditScore] = useState(false);
   const [us, setUs] = useState(match.score_us?.toString() ?? "");
   const [opp, setOpp] = useState(match.score_opponent?.toString() ?? "");
+  const [editCaption, setEditCaption] = useState(false);
+  const [caption, setCaption] = useState(match.story_caption ?? "");
 
   useEffect(() => {
     setUs(match.score_us?.toString() ?? "");
     setOpp(match.score_opponent?.toString() ?? "");
   }, [match.score_us, match.score_opponent]);
+
+  useEffect(() => setCaption(match.story_caption ?? ""), [match.story_caption]);
+
+  const canEditStory = can("story", "edit");
+  async function saveCaption() {
+    try {
+      await upsertMatch.mutateAsync({ id: match.id, story_caption: caption.trim() || null });
+      toast.success("บันทึกคำบรรยายแล้ว");
+      setEditCaption(false);
+    } catch (e) {
+      toast.error("บันทึกไม่สำเร็จ", { description: String((e as Error).message) });
+    }
+  }
 
   const hasScore = match.score_us != null || match.score_opponent != null;
   const opponentName = match.opponent || "คู่แข่ง";
@@ -144,6 +159,51 @@ function MatchPost({ match }: { match: Match }) {
       {/* สนาม */}
       <div className="flex items-center gap-1 px-3 pb-2 text-xs text-[hsl(var(--text-muted))]">
         <MapPin size={13} /> {venueText(match)}
+      </div>
+
+      {/* คำบรรยาย (caption) */}
+      <div className="px-3 pb-2">
+        {editCaption ? (
+          <div className="space-y-2">
+            <textarea
+              className="input min-h-[70px] resize-none"
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+              placeholder="เขียนคำบรรยายโพสต์..."
+              autoFocus
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                className="btn-ghost px-3 py-1.5"
+                onClick={() => {
+                  setCaption(match.story_caption ?? "");
+                  setEditCaption(false);
+                }}
+              >
+                ยกเลิก
+              </button>
+              <button className="btn-brand px-3 py-1.5" onClick={saveCaption} disabled={upsertMatch.isPending}>
+                บันทึก
+              </button>
+            </div>
+          </div>
+        ) : match.story_caption ? (
+          <div
+            className={`whitespace-pre-wrap break-words text-sm ${canEditStory ? "cursor-text" : ""}`}
+            onClick={() => canEditStory && setEditCaption(true)}
+          >
+            {match.story_caption}
+          </div>
+        ) : (
+          canEditStory && (
+            <button
+              className="flex items-center gap-1.5 text-sm text-[hsl(var(--text-muted))]"
+              onClick={() => setEditCaption(true)}
+            >
+              <Pencil size={13} /> เพิ่มคำบรรยาย...
+            </button>
+          )
+        )}
       </div>
 
       {/* สกอร์ */}

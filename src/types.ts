@@ -50,6 +50,7 @@ export interface Match {
   score_us: number | null;
   score_opponent: number | null;
   cost: number;
+  story_caption: string | null;
   created_at: string;
 }
 
