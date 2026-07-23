@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { LOGO_URL } from "@/lib/assets";
 
 export default function SplashScreen() {
   const [gone, setGone] = useState(false);
@@ -19,7 +20,7 @@ export default function SplashScreen() {
           transition={{ duration: 0.4 }}
         >
           <motion.img
-            src="/logo.png"
+            src={LOGO_URL}
             alt="LGP MAX"
             className="h-36 w-36 rounded-full drop-shadow-[0_8px_24px_rgba(0,0,0,0.5)]"
             initial={{ scale: 0.8, opacity: 0 }}

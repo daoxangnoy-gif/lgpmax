@@ -1,5 +1,6 @@
 import { Clock, LogOut, RefreshCw } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { LOGO_URL } from "@/lib/assets";
 
 export default function PendingPage() {
   const { profile, signOut, refreshProfile } = useAuth();
@@ -7,7 +8,7 @@ export default function PendingPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-6 pt-safe pb-safe text-center">
-      <img src="/logo.png" alt="LGP MAX" className="mb-4 h-20 w-20 rounded-full opacity-80" draggable={false} />
+      <img src={LOGO_URL} alt="LGP MAX" className="mb-4 h-20 w-20 rounded-full opacity-80" draggable={false} />
       <div
         className={`mb-4 flex h-16 w-16 items-center justify-center rounded-full ${
           rejected ? "bg-red-500/20 text-red-400" : "bg-amber-500/20 text-amber-400"

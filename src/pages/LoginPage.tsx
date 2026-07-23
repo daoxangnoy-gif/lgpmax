@@ -3,6 +3,7 @@ import { Loader2, LogIn, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { LOGO_URL } from "@/lib/assets";
 
 export default function LoginPage() {
   const { signIn, signUp } = useAuth();
@@ -34,7 +35,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-6 pt-safe pb-safe">
-      <img src="/logo.png" alt="LGP MAX" className="mb-4 h-24 w-24 rounded-full" draggable={false} />
+      <img src={LOGO_URL} alt="LGP MAX" className="mb-4 h-24 w-24 rounded-full" draggable={false} />
       <h1 className="text-2xl font-extrabold tracking-wide">LGP MAX</h1>
       <p className="mb-6 text-xs text-[hsl(var(--text-muted))]">LLGP Football Club</p>
 

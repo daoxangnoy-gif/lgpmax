@@ -3,10 +3,10 @@ import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 import path from "path";
 
-// base: "/" ใช้งานได้ทั้งเปิดตรง ๆ และ wrap เป็น APK
-// ถ้า deploy ใต้ subpath (เช่น GitHub Pages /repo/) ให้เปลี่ยน base เป็น "/<repo>/"
+// base = "/lgpmax/" เพราะ deploy GitHub Pages ที่ daoxangnoy-gif.github.io/lgpmax/
+// (ถ้าย้าย host เป็น root domain เช่น Netlify/Vercel ให้เปลี่ยนกลับเป็น "/")
 export default defineConfig({
-  base: "/",
+  base: "/lgpmax/",
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },
   },
@@ -25,8 +25,8 @@ export default defineConfig({
         background_color: "#0a0f1e",
         display: "standalone",
         orientation: "portrait",
-        start_url: "/",
-        scope: "/",
+        start_url: "/lgpmax/",
+        scope: "/lgpmax/",
         icons: [
           { src: "pwa-192.png", sizes: "192x192", type: "image/png" },
           { src: "pwa-512.png", sizes: "512x512", type: "image/png" },

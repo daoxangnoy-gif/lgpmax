@@ -14,6 +14,7 @@ import RegisterPage from "./pages/RegisterPage";
 import SummaryPage from "./pages/SummaryPage";
 import { useAuth } from "./hooks/useAuth";
 import { MENUS, type MenuKey } from "./lib/auth";
+import { LOGO_URL } from "./lib/assets";
 
 export default function App() {
   const { loading, session, isApproved } = useAuth();
@@ -64,7 +65,7 @@ function NoAccess() {
   const { signOut, profile } = useAuth();
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
-      <img src="/logo.png" alt="" className="h-16 w-16 rounded-full opacity-70" />
+      <img src={LOGO_URL} alt="" className="h-16 w-16 rounded-full opacity-70" />
       <div>
         <h1 className="text-lg font-bold">ยังไม่มีสิทธิ์เข้าเมนูใด</h1>
         <p className="mt-1 text-sm text-[hsl(var(--text-muted))]">
