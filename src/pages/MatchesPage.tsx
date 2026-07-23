@@ -83,7 +83,7 @@ export default function MatchesPage() {
                 <div className="min-w-0">
                   <div className="text-xs text-[hsl(var(--text-muted))]">{formatMatchWhen(m)}</div>
                   <div className="mt-0.5 truncate text-base font-semibold">
-                    พบ {m.opponent || "— ยังไม่ระบุคู่แข่ง"}
+                    Lgp Max ພົບກັບ {m.opponent || "— ยังไม่ระบุคู่แข่ง"}
                   </div>
                   <div className="mt-1 flex items-center gap-1 text-xs text-[hsl(var(--text-muted))]">
                     <MapPin size={13} /> {venueText(m)}
