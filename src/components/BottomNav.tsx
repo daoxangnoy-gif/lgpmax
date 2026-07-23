@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Users, CalendarDays, Images, LayoutGrid, ShieldCheck } from "lucide-react";
+import { Users, CalendarDays, Images, LayoutGrid, ShieldCheck, BarChart3 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import type { MenuKey } from "@/lib/auth";
 
@@ -35,6 +35,21 @@ export default function BottomNav() {
             )}
           </NavLink>
         ))}
+        <NavLink
+          to="/summary"
+          className={({ isActive }) =>
+            `flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition ${
+              isActive ? "text-brand" : "text-[hsl(var(--text-muted))]"
+            }`
+          }
+        >
+          {({ isActive }) => (
+            <>
+              <BarChart3 size={22} strokeWidth={isActive ? 2.6 : 2} />
+              <span>สรุป</span>
+            </>
+          )}
+        </NavLink>
         {isAdmin && (
           <NavLink
             to="/admin"

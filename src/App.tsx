@@ -11,6 +11,7 @@ import LoginPage from "./pages/LoginPage";
 import PendingPage from "./pages/PendingPage";
 import UserAdminPage from "./pages/UserAdminPage";
 import RegisterPage from "./pages/RegisterPage";
+import SummaryPage from "./pages/SummaryPage";
 import { useAuth } from "./hooks/useAuth";
 import { MENUS, type MenuKey } from "./lib/auth";
 
@@ -43,6 +44,7 @@ function AppShell() {
           {isAdmin && <Route path="/admin" element={<UserAdminPage />} />}
           {/* ยืนยันลงทะเบียน — เข้าได้ทุกคนที่อนุมัติแล้ว (เป้าหมาย share link) */}
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/summary" element={<SummaryPage />} />
           <Route path="/no-access" element={<NoAccess />} />
           <Route path="*" element={<Navigate to={home} replace />} />
         </Routes>
