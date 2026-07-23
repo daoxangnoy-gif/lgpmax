@@ -19,11 +19,11 @@ function MatchCardAttendees({ matchId }: { matchId: string }) {
   const going = players.filter((p) => goingIds.has(p.id));
   if (going.length === 0) return null;
   return (
-    <div className="mt-2 flex items-center gap-1.5 text-xs">
-      <span className="flex h-5 items-center rounded-full bg-emerald-500/20 px-2 font-bold text-emerald-400">
+    <div className="mt-2 flex items-start gap-1.5 text-xs">
+      <span className="flex h-5 shrink-0 items-center rounded-full bg-emerald-500/20 px-2 font-bold text-emerald-400">
         มา {going.length}
       </span>
-      <span className="truncate text-[hsl(var(--text-muted))]">
+      <span className="flex-1 whitespace-normal break-words leading-relaxed text-[hsl(var(--text-muted))]">
         {going.map((p) => p.name).join(", ")}
       </span>
     </div>
@@ -91,12 +91,12 @@ export default function MatchesPage() {
                   <MatchCardAttendees matchId={m.id} />
                 </div>
                 {score ? (
-                  <div className="rounded-xl bg-brand/20 px-3 py-1.5 text-center">
+                  <div className="shrink-0 whitespace-nowrap rounded-xl bg-brand/20 px-3 py-1.5 text-center">
                     <div className="text-lg font-bold leading-none text-brand">{score}</div>
                     <div className="mt-0.5 text-[10px] text-[hsl(var(--text-muted))]">เรา-คู่แข่ง</div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-1 rounded-lg bg-[hsl(var(--surface-2))] px-2.5 py-1.5 text-xs text-[hsl(var(--text-muted))]">
+                  <div className="flex shrink-0 items-center gap-1 rounded-lg bg-[hsl(var(--surface-2))] px-2.5 py-1.5 text-xs text-[hsl(var(--text-muted))]">
                     <Users size={13} /> ลงชื่อ
                   </div>
                 )}
