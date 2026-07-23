@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import AppHeader from "@/components/AppHeader";
 import EnvBanner from "@/components/EnvBanner";
 import PostSocial from "@/components/PostSocial";
+import Lightbox from "@/components/Lightbox";
 import { useMatches, useUpsertMatch } from "@/hooks/useMatches";
 import { useAuth } from "@/hooks/useAuth";
 import { useAddStoryPhoto, useDeleteStoryPhoto, useStoryPhotos } from "@/hooks/useStory";
@@ -65,6 +66,7 @@ function MatchPost({ match }: { match: Match }) {
   const [opp, setOpp] = useState(match.score_opponent?.toString() ?? "");
   const [editCaption, setEditCaption] = useState(false);
   const [caption, setCaption] = useState(match.story_caption ?? "");
+  const [lightbox, setLightbox] = useState<number | null>(null);
 
   useEffect(() => {
     setUs(match.score_us?.toString() ?? "");
@@ -269,17 +271,21 @@ function MatchPost({ match }: { match: Match }) {
       {/* อัลบั้มรูป */}
       {photos.length > 0 && (
         <div className={`grid gap-0.5 ${photos.length === 1 ? "grid-cols-1" : "grid-cols-3"}`}>
-          {photos.map((ph) => (
+          {photos.map((ph, i) => (
             <div
               key={ph.id}
-              className={`group relative overflow-hidden ${
+              className={`group relative cursor-pointer overflow-hidden ${
                 photos.length === 1 ? "aspect-video" : "aspect-square"
               }`}
+              onClick={() => setLightbox(i)}
             >
               <img src={ph.photo_url} alt={ph.caption ?? ""} className="h-full w-full object-cover" />
               {can("story", "delete") && (
                 <button
-                  onClick={() => onDelete(ph)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(ph);
+                  }}
                   className="absolute right-1 top-1 rounded-lg bg-black/60 p-1.5 text-white opacity-0 transition group-hover:opacity-100"
                   aria-label="ลบรูป"
                 >
@@ -318,6 +324,8 @@ function MatchPost({ match }: { match: Match }) {
 
       {/* ไลค์ / คอมเมนต์ / แชร์ */}
       <PostSocial matchId={match.id} shareInfo={shareInfo} />
+
+      <Lightbox photos={photos} index={lightbox} onClose={() => setLightbox(null)} onIndex={setLightbox} />
     </article>
   );
 }
