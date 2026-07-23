@@ -1,5 +1,5 @@
 import { Check, Loader2, Share2, X } from "lucide-react";
-import { toast } from "sonner";
+import { shareLink } from "@/lib/share";
 import { PlayerAvatar } from "./PlayerCard";
 import { usePlayers } from "@/hooks/usePlayers";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,21 +23,8 @@ export default function MatchAttendance({ match }: { match: Match }) {
 
   async function share() {
     const url = `${location.origin}${location.pathname}#/register?m=${match.id}`;
-    const text = `⚽ ยืนยันมาแข่ง — พบ ${match.opponent || "คู่แข่ง"} · ${formatMatchWhen(match)}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: "LGP MAX — ลงทะเบียนมาแข่ง", text, url });
-      } catch {
-        /* ยกเลิก */
-      }
-    } else {
-      try {
-        await navigator.clipboard.writeText(`${text}\n${url}`);
-        toast.success("คัดลอกลิงก์แล้ว — ส่งให้เพื่อนกดยืนยันได้");
-      } catch {
-        toast.error("แชร์ไม่ได้บนอุปกรณ์นี้");
-      }
-    }
+    const text = `⚽ ยืนยันมาแข่ง — Lgp Max ພົບກັບ ${match.opponent || "คู่แข่ง"} · ${formatMatchWhen(match)}`;
+    await shareLink({ title: "LGP MAX — ลงทะเบียนมาแข่ง", text, url });
   }
 
   const busy = setReg.isPending || clearReg.isPending;

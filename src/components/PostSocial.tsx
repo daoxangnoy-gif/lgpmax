@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useClearReaction, useReactions, useSetReaction } from "@/hooks/useReactions";
 import { useAddComment, useComments, useDeleteComment } from "@/hooks/useComments";
 import { getDeviceId, getDisplayName, setDisplayName } from "@/lib/identity";
+import { shareLink } from "@/lib/share";
 import { timeAgo } from "@/lib/format";
 import { REACTIONS, REACTION_EMOJI, type Comment, type ReactionType } from "@/types";
 
@@ -70,21 +71,7 @@ export default function PostSocial({
   }
 
   async function share() {
-    const data = { title: shareInfo.title, text: shareInfo.text, url: shareInfo.url };
-    if (navigator.share) {
-      try {
-        await navigator.share(data);
-      } catch {
-        /* ผู้ใช้ยกเลิก */
-      }
-    } else {
-      try {
-        await navigator.clipboard.writeText(`${data.text}\n${data.url}`);
-        toast.success("คัดลอกลิงก์แล้ว — เอาไปวางส่งในแอปอื่นได้เลย");
-      } catch {
-        toast.error("แชร์ไม่ได้บนอุปกรณ์นี้");
-      }
-    }
+    await shareLink({ title: shareInfo.title, text: shareInfo.text, url: shareInfo.url });
   }
 
   const myLabel = myReaction
