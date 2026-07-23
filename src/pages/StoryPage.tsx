@@ -71,7 +71,6 @@ function MatchPost({ match }: { match: Match }) {
 
   const hasScore = match.score_us != null || match.score_opponent != null;
   const opponentName = match.opponent || "คู่แข่ง";
-  const initial = opponentName.trim().slice(0, 1).toUpperCase();
 
   // ผล แพ้/ชนะ/เสมอ (มุมทีมเรา)
   let result: { text: string; cls: string } | null = null;
@@ -129,11 +128,8 @@ function MatchPost({ match }: { match: Match }) {
     <article id={`post-${match.id}`} className="card overflow-hidden transition-all">
       {/* header โพสต์ */}
       <div className="flex items-center gap-3 p-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand text-lg font-bold text-brand-fg">
-          {initial}
-        </div>
         <div className="min-w-0 flex-1">
-          <div className="truncate font-semibold">พบ {opponentName}</div>
+          <div className="truncate font-semibold">Lgp Max ພົບກັບ {opponentName}</div>
           <div className="flex items-center gap-1 text-xs text-[hsl(var(--text-muted))]">
             {formatMatchWhen(match)}
           </div>
